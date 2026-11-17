@@ -2,6 +2,10 @@
 
 # $Id: Dockerfile,v 1.57 2025/09/12 13:29:26 gilles Exp gilles $
 #
+# Heaventree fork: built on Debian 12 (bookworm), since Debian 11 (bullseye)
+# security packages now return 404. Crypt::OpenSSL::PKCS12 comes from CPAN
+# because bookworm has no Debian package for it.
+#
 # This file is also located at 
 # https://imapsync.lamiral.info/INSTALL.d/Dockerfile
 # For more information about this image, see
@@ -67,8 +71,8 @@
 # Debian Bullseye is Debian 11
 # Debian Bookworm is Debian 12
 
-FROM debian:bullseye 
-#FROM debian:bookworm 
+FROM debian:bookworm 
+#FROM debian:bullseye 
 
 LABEL   maintainer="Gilles LAMIRAL <gilles@lamiral.info>" \
         description="Imapsync" \
@@ -91,7 +95,8 @@ RUN set -xe && \
   && apt-get install -y \
   libauthen-ntlm-perl \
   libcgi-pm-perl \
-  libcrypt-openssl-pkcs12-perl \
+  libssl-dev \
+  build-essential \
   libcrypt-openssl-rsa-perl \
   libdata-uniqid-perl \
   libemail-address-perl \
@@ -135,7 +140,7 @@ RUN set -xe && \
   bind9-host \
   apt-file \
   && apt-file update \
-  && cpanm IO::Socket::SSL 
+  && cpanm --from https://www.cpan.org IO::Socket::SSL Crypt::OpenSSL::PKCS12
 
 # I added the IO::Socket::SSL update to avoid the annoying, confusing and useless warning
 # DEBUG: .../IO/Socket/SSL.pm:1177: global error: Undefined SSL object
