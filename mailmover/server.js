@@ -19,6 +19,19 @@ const PUBLIC = path.join(__dirname, 'public');
 const WORK = process.env.WORK_DIR || path.join(os.tmpdir(), 'mailmover');
 fs.mkdirSync(WORK, { recursive: true, mode: 0o700 });
 
+const MS = { tenant: process.env.MS_TENANT_ID || '', client: process.env.MS_CLIENT_ID || '', secret: process.env.MS_CLIENT_SECRET || '' };
+const msConfigured = () => !!(MS.tenant && MS.client && MS.secret);
+const MS_HOST = 'outlook.office365.com';
+
+// App-only token for Microsoft 365 (client credentials). Tokens last about an hour, so fetch one per run.
+async function msToken() {
+  const body = new URLSearchParams({ grant_type: 'client_credentials', client_id: MS.client, client_secret: MS.secret, scope: 'https://outlook.office365.com/.default' });
+  const r = await fetch(`https://login.microsoftonline.com/${encodeURIComponent(MS.tenant)}/oauth2/v2.0/token`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) throw new Error(j.error_description ? String(j.error_description).split('\r')[0] : 'Microsoft sign-in failed');
+  return j.access_token;
+}
+
 const jobs = new Map();
 
 const hhmmss = () => new Date().toISOString().slice(11, 19);
@@ -120,10 +133,10 @@ function runningCount() {
 function startJob(input) {
   const job = newJob(input);
   const p1 = path.join(job.dir, 'p1'), p2 = path.join(job.dir, 'p2');
-  fs.writeFileSync(p1, input.pass1 + '\n', { mode: 0o600 });
   fs.writeFileSync(p2, input.pass2 + '\n', { mode: 0o600 });
+  const src = input.token ? ['--oauthaccesstoken1', input.token] : (fs.writeFileSync(p1, input.pass1 + '\n', { mode: 0o600 }), ['--passfile1', p1]);
   const args = [
-    '--host1', input.host1, '--user1', input.user1, '--passfile1', p1,
+    '--host1', input.host1, '--user1', input.user1, ...src,
     '--host2', input.host2, '--user2', input.user2, '--passfile2', p2,
     '--nolog', '--nomodulesversion', '--noid', '--tmpdir', job.dir, '--pidfile', path.join(job.dir, 'pid')
   ];
@@ -189,11 +202,17 @@ const server = http.createServer(async (req, res) => {
       };
       if (!validHost(input.host1) || !validHost(input.host2)) return json(res, 400, { error: 'Enter valid server names, like imap.example.com.' });
       if (!validUser(input.user1) || !validUser(input.user2)) return json(res, 400, { error: 'Enter both email addresses.' });
-      if (!validPass(input.pass1) || !validPass(input.pass2)) return json(res, 400, { error: 'Enter both passwords.' });
+      const viaMs = input.host1.toLowerCase() === MS_HOST && !input.pass1;
+      if (viaMs && !msConfigured()) return json(res, 400, { error: 'Microsoft 365 needs a company login, which is not set up on this server yet.' });
+      if ((!viaMs && !validPass(input.pass1)) || !validPass(input.pass2)) return json(res, 400, { error: 'Enter both passwords.' });
       if (runningCount() >= MAX_RUNNING) return json(res, 429, { error: 'The server is busy with other transfers. Try again in a few minutes.' });
+      if (viaMs) {
+        try { input.token = await msToken(); } catch (e) { return json(res, 502, { error: 'Could not sign in to Microsoft 365: ' + e.message }); }
+      }
       const job = startJob(input);
       return json(res, 200, { id: job.id });
     }
+    if (req.method === 'GET' && p === '/api/config') return json(res, 200, { m365: msConfigured() });
     let m = p.match(/^\/api\/jobs\/([0-9a-f]{32})\/(stream|stop|pause|log)$/);
     if (m) {
       const job = jobs.get(m[1]);
