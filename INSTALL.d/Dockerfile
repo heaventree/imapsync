@@ -160,6 +160,8 @@ RUN set -xe \
 # Patched so the Content-type header is always printed (Net::Server 2.x
 # otherwise answers "Premature end of script headers"). Self-signed cert
 # is only there because servimapsync insists on one; put TLS/login in front.
+# imapsync-web runs from a writable copy of /opt/web (imapsync needs to write
+# a temp dir and logs in its current directory, and the server runs as nobody).
 COPY X/servimapsyn[c] X/imapsync_form_extra.htm[l] X/imapsync_form.htm[l] X/imapsync_form.cs[s] X/imapsync_form.j[s] /opt/web/
 RUN set -xe \
   && cd /opt/web \
@@ -168,7 +170,7 @@ RUN set -xe \
   && ln -s /usr/bin/imapsync imapsync \
   && openssl req -x509 -newkey rsa:2048 -nodes -keyout privkey.pem -out fullchain.pem -days 3650 -subj /CN=localhost \
   && chmod 644 privkey.pem fullchain.pem \
-  && printf '#!/bin/sh\ncd /opt/web && exec perl servimapsync\n' > /usr/local/bin/imapsync-web \
+  && printf '#!/bin/sh\nmkdir -p /var/tmp/web/run && cp -R /opt/web/. /var/tmp/web/run/ && cd /var/tmp/web/run && exec perl servimapsync\n' > /usr/local/bin/imapsync-web \
   && chmod +x /usr/local/bin/imapsync-web
 
 EXPOSE 8080
