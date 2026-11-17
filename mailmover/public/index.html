@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MailMover</title>
+<style>
+:root{--bg:#F6F5F1;--ink:#1B1F24;--mute:#5B636B;--line:#E2E0D8;--card:#FFFFFF;--accent:#0F766E;--accent-ink:#FFFFFF;--field:#C9C6BB;--log:#11161B;--log-line:#232B33;--log-ink:#CBD5E1;--log-mute:#9FB3C8;--ok:#4ADE80;--warn:#FBBF24;--err:#F87171;--bar:#2DD4BF}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;min-height:100vh}
+header{height:60px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 28px;border-bottom:1px solid var(--line);background:var(--card)}
+.logo{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
+header b{font-size:16px}
+main{flex:1;min-height:0;display:flex;gap:24px;padding:24px 28px;height:calc(100vh - 60px)}
+.feed{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--log);border-radius:14px;overflow:hidden;position:relative}
+.top{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--log-line);flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:99px;background:#64748B;flex-shrink:0}
+.dot.running{background:var(--ok)}.dot.done{background:var(--ok)}.dot.failed{background:var(--err)}.dot.stopped{background:var(--warn)}
+.title{color:#F1F5F9;font-weight:600;font-size:15px}
+.sub{color:var(--log-mute);font-size:13px;overflow-wrap:anywhere}
+.sp{flex:1}
+.btn{font:inherit;font-size:13px;color:#E2E8F0;background:#1C242C;border:1px solid #2E3943;border-radius:8px;padding:8px 12px;cursor:pointer;min-height:36px}
+.btn:disabled{opacity:.45;cursor:default}
+.prog{padding:16px 20px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--log-line)}
+.row{display:flex;justify-content:space-between;gap:12px;color:var(--log-ink);font-size:13px}
+.row b{color:#F1F5F9}
+.bar{height:8px;border-radius:99px;background:var(--log-line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--bar);transition:width .3s}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:#1A2229;border-radius:10px;padding:10px 12px}
+.stat span{display:block;color:var(--log-mute);font-size:12px}
+.stat b{display:block;color:#F1F5F9;font-size:20px;font-weight:600;margin-top:2px}
+.hint{display:none;margin:0 20px 0;padding:10px 12px;border-radius:10px;background:#3B2A12;color:#FDE68A;font-size:13px;line-height:1.5}
+.hint.show{display:block;margin:12px 20px 0}
+.filters{display:flex;gap:8px;padding:12px 20px;border-bottom:1px solid var(--log-line);align-items:center}
+.chip{font:inherit;font-size:12px;color:var(--log-ink);background:#1C242C;border:0;border-radius:99px;padding:6px 12px;cursor:pointer;min-height:32px}
+.chip[aria-pressed=true]{background:var(--bar);color:#0B1F1D}
+.log{flex:1;min-height:0;overflow-y:auto;padding:12px 20px;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.7}
+.ln{display:flex;gap:14px}.ln .t{color:#64748B;flex-shrink:0}.ln .m{color:var(--log-mute);overflow-wrap:anywhere;min-width:0}
+.ln.key .m{color:#E2E8F0}.ln.ok .m{color:var(--ok)}.ln.warn .m{color:var(--warn)}.ln.err .m{color:var(--err)}
+.empty{color:var(--log-mute);font-family:inherit;font-size:14px;line-height:1.6;padding:24px 0}
+.jump{position:absolute;right:20px;bottom:16px;display:none}
+.jump.show{display:block}
+aside{width:420px;flex-shrink:0;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+form{display:flex;flex-direction:column;min-height:0;flex:1}
+.fields{flex:1;min-height:0;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:18px}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+legend{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--mute);padding:0;margin-bottom:10px}
+.f{display:flex;flex-direction:column;gap:6px}
+label{font-size:13px;font-weight:500}
+input[type=text],input[type=password],input[type=email]{font:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--field);border-radius:8px;background:#fff;color:var(--ink);width:100%;min-height:44px}
+input:focus-visible,button:focus-visible{outline:3px solid #5EEAD4;outline-offset:2px}
+hr{border:0;border-top:1px solid #ECEAE2;margin:0;width:100%}
+.chk{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:400}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
+.err{color:#B42318;font-size:13px;min-height:1em}
+.actions{padding:16px 22px;border-top:1px solid var(--line);background:#FBFAF7;display:flex;gap:10px}
+.go{flex:1;font:inherit;font-size:15px;font-weight:600;color:var(--accent-ink);background:var(--accent);border:0;border-radius:10px;padding:12px 16px;cursor:pointer;min-height:44px}
+.go:disabled{opacity:.5;cursor:default}
+.alt{font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1px solid var(--field);border-radius:10px;padding:12px 16px;cursor:pointer;min-height:44px}
+.alt:disabled{opacity:.5;cursor:default}
+.note{font-size:12px;color:var(--mute);line-height:1.5}
+@media (max-width:900px){
+  main{flex-direction:column-reverse;height:auto;padding:16px}
+  aside{width:100%}
+  .feed{min-height:70vh}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  header{padding:0 16px}
+}
+</style>
+</head>
+<body>
+<header><div class="logo" aria-hidden="true">M</div><b>MailMover</b></header>
+<main>
+<section class="feed" aria-label="Transfer progress">
+  <div class="top">
+    <div class="dot" id="dot" aria-hidden="true"></div>
+    <div class="title" id="title">No transfer yet</div>
+    <div class="sub" id="who"></div>
+    <div class="sp"></div>
+    <button class="btn" id="pause" type="button" disabled>Pause</button>
+    <button class="btn" id="stop" type="button" disabled>Stop</button>
+    <a class="btn" id="dl" style="text-decoration:none;display:none;align-items:center" download>Download log</a>
+  </div>
+  <div class="prog" aria-live="polite">
+    <div class="row"><div id="where">Fill in the form and start.</div><b id="pct">0%</b></div>
+    <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barwrap"><i id="bar"></i></div>
+    <div class="stats">
+      <div class="stat"><span>Copied</span><b id="s-done">0</b></div>
+      <div class="stat"><span>Remaining</span><b id="s-left">0</b></div>
+      <div class="stat"><span>Speed</span><b id="s-speed">0 msg/s</b></div>
+      <div class="stat"><span>Errors</span><b id="s-err">0</b></div>
+    </div>
+  </div>
+  <div class="hint" id="hint" role="status"></div>
+  <div class="filters">
+    <button class="chip" type="button" data-f="hi" aria-pressed="true">Highlights</button>
+    <button class="chip" type="button" data-f="all" aria-pressed="false">Everything</button>
+    <div class="sp"></div>
+  </div>
+  <div class="log" id="log" tabindex="0" aria-label="Log">
+    <div class="empty" id="empty">Your transfer will show up here as it runs. Run a test first: nothing is copied until you untick it.</div>
+  </div>
+  <button class="btn jump" id="jump" type="button">Jump to latest</button>
+</section>
+
+<aside aria-label="Transfer setup">
+<form id="form" autocomplete="off">
+  <div class="fields">
+    <fieldset>
+      <legend>SOURCE</legend>
+      <div class="f"><label for="host1">Server</label><input id="host1" type="text" placeholder="imap.old-host.com" required inputmode="url" autocapitalize="none" spellcheck="false"></div>
+      <div class="f"><label for="user1">Email</label><input id="user1" type="text" placeholder="you@example.com" required autocapitalize="none" spellcheck="false"></div>
+      <div class="f" id="pw1wrap"><label for="pass1">Password</label><input id="pass1" type="password" required></div>
+      <div class="note" id="msnote" hidden>Microsoft 365 is signed in with our company login. Leave the password empty. The mailbox must be shared with it.</div>
+    </fieldset>
+    <hr>
+    <fieldset>
+      <legend>DESTINATION</legend>
+      <div class="f"><label for="host2">Server</label><input id="host2" type="text" placeholder="imap.new-host.com" required inputmode="url" autocapitalize="none" spellcheck="false"></div>
+      <div class="f"><label for="user2">Email</label><input id="user2" type="text" placeholder="you@example.com" required autocapitalize="none" spellcheck="false"></div>
+      <div class="f"><label for="pass2">Password</label><input id="pass2" type="password" required></div>
+    </fieldset>
+    <hr>
+    <fieldset>
+      <legend>OPTIONS</legend>
+      <label class="chk"><input type="checkbox" id="dry" checked>Test run first (nothing is copied)</label>
+      <label class="chk"><input type="checkbox" id="automap">Match folders like Sent and Trash automatically</label>
+    </fieldset>
+    <div class="err" id="err" role="alert"></div>
+    <div class="note">Passwords are used for this transfer only and are not stored.</div>
+  </div>
+  <div class="actions">
+    <button class="alt" id="test" type="button">Test connection</button>
+    <button class="go" id="go" type="submit">Start transfer</button>
+  </div>
+</form>
+</aside>
+</main>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  var logEl=$('log'),filter='hi',es=null,jobId=null,lines=[],atBottom=true,final=false;
+  var statusText={starting:'Starting',running:'Transfer running',done:'Finished',failed:'Stopped with an error',stopped:'Stopped'};
+
+  function show(l){return filter==='all'||l.k==='key'||l.k==='ok'||l.k==='warn'||l.k==='err';}
+  function el(l){var d=document.createElement('div');d.className='ln '+l.k;var t=document.createElement('span');t.className='t';t.textContent=l.t;var m=document.createElement('span');m.className='m';m.textContent=l.m;d.appendChild(t);d.appendChild(m);return d;}
+  function addLine(l){lines.push(l);var e=$('empty');if(e)e.remove();if(show(l)){logEl.appendChild(el(l));if(atBottom)logEl.scrollTop=logEl.scrollHeight;}}
+  function rebuild(){logEl.textContent='';lines.forEach(function(l){if(show(l))logEl.appendChild(el(l));});logEl.scrollTop=logEl.scrollHeight;}
+  logEl.addEventListener('scroll',function(){atBottom=logEl.scrollHeight-logEl.scrollTop-logEl.clientHeight<40;$('jump').classList.toggle('show',!atBottom);});
+  $('jump').addEventListener('click',function(){logEl.scrollTop=logEl.scrollHeight;});
+  document.querySelectorAll('.chip').forEach(function(c){c.addEventListener('click',function(){filter=c.dataset.f;document.querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',x===c?'true':'false');});rebuild();});});
+
+  var m365=false;
+  function syncSource(){var ms=m365&&$('host1').value.trim().toLowerCase()==='outlook.office365.com';$('msnote').hidden=!ms;$('pw1wrap').hidden=ms;$('pass1').required=!ms;if(ms)$('pass1').value='';}
+  $('host1').addEventListener('input',syncSource);
+  fetch('/api/config').then(function(r){return r.json();}).then(function(c){m365=!!c.m365;syncSource();}).catch(function(){});
+
+  function fmt(n){return Number(n||0).toLocaleString();}
+  function render(st){
+    var s=st.stats,status=st.status;
+    $('dot').className='dot '+status;
+    var ttl=statusText[status]||status;
+    if(st.mode==='test'&&status==='done')ttl='Connection works';
+    if(st.mode==='test'&&status==='running')ttl='Testing connection';
+    if(st.dry&&st.mode==='run'&&status==='done')ttl='Test run finished (nothing copied)';
+    if(st.paused)ttl='Paused';
+    $('title').textContent=ttl;
+    $('who').textContent=s.source&&s.dest?s.source+' → '+s.dest:'';
+    var pct=s.total?Math.min(100,Math.round(s.done/s.total*100)):(status==='done'?100:0);
+    $('pct').textContent=pct+'%';$('bar').style.width=pct+'%';$('barwrap').setAttribute('aria-valuenow',pct);
+    $('where').textContent=s.folder?('Folder '+s.folderIdx+' of '+s.folderCount+' · '+s.folder):(status==='running'?'Connecting…':'');
+    $('s-done').textContent=fmt(s.done);
+    $('s-left').textContent=s.left===null?'–':fmt(s.left);
+    $('s-speed').textContent=(s.speed||0)+' msg/s';
+    $('s-err').textContent=fmt(s.errors);
+    var h=$('hint');if(s.hint){h.textContent=s.hint;h.classList.add('show');}else h.classList.remove('show');
+    var live=status==='running'||status==='starting';
+    $('pause').disabled=!live;$('stop').disabled=!live;$('pause').textContent=st.paused?'Resume':'Pause';
+    $('go').disabled=live;$('test').disabled=live;
+    if(!live){final=true;}
+    if(jobId){var a=$('dl');a.style.display='inline-flex';a.href='/api/jobs/'+jobId+'/log';}
+  }
+
+  function connect(id){
+    if(es)es.close();jobId=id;final=false;
+    try{sessionStorage.setItem('mm-job',id);}catch(e){}
+    es=new EventSource('/api/jobs/'+id+'/stream?from='+(lines.length-1));
+    es.addEventListener('line',function(ev){addLine(JSON.parse(ev.data));});
+    es.addEventListener('state',function(ev){var st=JSON.parse(ev.data);render(st);if(final){es.close();}});
+    es.onerror=function(){ if(final&&es)es.close(); };
+  }
+
+  function reset(){lines=[];logEl.textContent='';atBottom=true;}
+
+  function start(path){
+    $('err').textContent='';
+    var body={host1:$('host1').value,user1:$('user1').value,pass1:$('pass1').value,host2:$('host2').value,user2:$('user2').value,pass2:$('pass2').value,dry:$('dry').checked,automap:$('automap').checked};
+    $('go').disabled=true;$('test').disabled=true;
+    fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});}).then(function(x){
+      if(!x.ok){$('err').textContent=x.j.error||'Something went wrong.';$('go').disabled=false;$('test').disabled=false;return;}
+      reset();connect(x.j.id);
+    }).catch(function(){$('err').textContent='Could not reach the server.';$('go').disabled=false;$('test').disabled=false;});
+  }
+  $('form').addEventListener('submit',function(e){e.preventDefault();start('/api/run');});
+  $('test').addEventListener('click',function(){if($('form').reportValidity())start('/api/test');});
+  $('stop').addEventListener('click',function(){if(jobId)fetch('/api/jobs/'+jobId+'/stop',{method:'POST'});});
+  $('pause').addEventListener('click',function(){if(jobId)fetch('/api/jobs/'+jobId+'/pause',{method:'POST'});});
+
+  try{var j=sessionStorage.getItem('mm-job');if(j){fetch('/api/jobs/'+j+'/log').then(function(r){if(r.ok){connect(j);}else{sessionStorage.removeItem('mm-job');}});}}catch(e){}
+})();
+</script>
+</body>
+</html>
