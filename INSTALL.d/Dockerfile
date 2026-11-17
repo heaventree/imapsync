@@ -140,7 +140,7 @@ RUN set -xe && \
   bind9-host \
   apt-file \
   && apt-file update \
-  && cpanm IO::Socket::SSL Crypt::OpenSSL::PKCS12 
+  && cpanm --from https://www.cpan.org IO::Socket::SSL Crypt::OpenSSL::PKCS12
 
 # I added the IO::Socket::SSL update to avoid the annoying, confusing and useless warning
 # DEBUG: .../IO/Socket/SSL.pm:1177: global error: Undefined SSL object
