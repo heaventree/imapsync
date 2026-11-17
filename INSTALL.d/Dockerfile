@@ -156,6 +156,23 @@ RUN set -xe \
   && cd && pwd && imapsync --testslive && { imapsync --tests || echo "WARNING: some imapsync --tests failed (usually IPv6 or network in the build sandbox); continuing" ; } && rm -rfv /var/tmp/uid_0/ # just_a_comment_to_force_update 2025_04_24_12_33_56
 
 
+# Web UI (X/servimapsync): form on port 8080, imapsync run as CGI.
+# Patched so the Content-type header is always printed (Net::Server 2.x
+# otherwise answers "Premature end of script headers"). Self-signed cert
+# is only there because servimapsync insists on one; put TLS/login in front.
+COPY X/servimapsyn[c] X/imapsync_form_extra.htm[l] X/imapsync_form.htm[l] X/imapsync_form.cs[s] X/imapsync_form.j[s] /opt/web/
+RUN set -xe \
+  && cd /opt/web \
+  && perl -0pi -e 's/if \( \$self->can\( .default_content_type. \) \)/if ( 0 )/' servimapsync \
+  && grep -q 'if ( 0 )' servimapsync \
+  && ln -s /usr/bin/imapsync imapsync \
+  && openssl req -x509 -newkey rsa:2048 -nodes -keyout privkey.pem -out fullchain.pem -days 3650 -subj /CN=localhost \
+  && chmod 644 privkey.pem fullchain.pem \
+  && printf '#!/bin/sh\ncd /opt/web && exec perl servimapsync\n' > /usr/local/bin/imapsync-web \
+  && chmod +x /usr/local/bin/imapsync-web
+
+EXPOSE 8080
+
 USER nobody:nogroup
 
 RUN set -xe \
