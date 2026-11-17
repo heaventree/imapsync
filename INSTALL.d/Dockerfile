@@ -81,7 +81,8 @@ LABEL   maintainer="Gilles LAMIRAL <gilles@lamiral.info>" \
 # I put a copy of the Dockerfile in the image itself, a good practice.
 # I optionally put my local and usually more recent imapsync on /, for testing purposes.
 
-COPY Dockerfile imapsyn[c] prerequisites_imapsyn[c] servimapsyn[c] /
+# Heaventree fork: Dockerfil[e] is a glob so the image also builds from the repo root (docker-compose.yml).
+COPY Dockerfil[e] imapsyn[c] prerequisites_imapsyn[c] servimapsyn[c] /
 
 # I also put the webserver script, called servimapsync, and its needed files, 
 # This is experimental stuff, http on port 8080, https on port 8443

@@ -1,0 +1,22 @@
+# Heaventree: imapsync as a Dokploy Compose service.
+# The container stays up idle; run syncs from Dokploy's terminal for this
+# service (or `docker exec -it <container> imapsync ...` on the server):
+#
+#   imapsync --host1 old.example.com --user1 a@old --password1 '...' \
+#            --host2 new.example.com --user2 a@new --password2 '...' --log
+#
+# Logs (--log) land in /var/tmp/LOG_imapsync, kept in the imapsync-data volume.
+services:
+  imapsync:
+    build:
+      context: .
+      dockerfile: INSTALL.d/Dockerfile
+    image: heaventree/imapsync:latest
+    command: ["sleep", "infinity"]
+    init: true
+    restart: unless-stopped
+    volumes:
+      - imapsync-data:/var/tmp
+
+volumes:
+  imapsync-data:
