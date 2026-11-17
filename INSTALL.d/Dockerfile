@@ -129,6 +129,7 @@ RUN set -xe && \
   libunicode-string-perl \
   liburi-perl  \
   libwww-perl \
+  nodejs \
   procps \
   wget \
   make \
@@ -172,6 +173,9 @@ RUN set -xe \
   && chmod 644 privkey.pem fullchain.pem \
   && printf '#!/bin/sh\nmkdir -p /var/tmp/web/run && cp -R /opt/web/. /var/tmp/web/run/ && cd /var/tmp/web/run && exec perl servimapsync\n' > /usr/local/bin/imapsync-web \
   && chmod +x /usr/local/bin/imapsync-web
+
+# MailMover: the new web front end (Node, no dependencies). Start it with: node /opt/mailmover/server.js
+COPY mailmover /opt/mailmover
 
 EXPOSE 8080
 
