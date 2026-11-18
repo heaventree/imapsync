@@ -11,3 +11,20 @@
   .deck .pt-space-xs{padding-top:0!important}.flagcol>*+*{margin-top:.25rem!important}
   .footbar{padding:.25rem 1rem!important}.footbar button{padding-top:.375rem!important;padding-bottom:.375rem!important}
 }
+@media (min-width:1024px){
+  #toprow{display:flex;align-items:center;gap:16px;flex:none;margin:.5rem 1.5rem 0 0}
+  #toprow #nav{margin-top:0!important}
+  #toprow .titlecard{flex:1;min-width:0;background:transparent!important;box-shadow:none!important;padding:0!important}
+  #toprow .titlecard p{display:none}
+}
+@media (min-width:768px){
+  .card div:has(>div>input[id^="user"]){display:grid!important;grid-template-columns:1fr 1fr;gap:.5rem}
+  .card div:has(>div>input[id^="user"])>*{margin-top:0!important}
+}
+.card label[for^="pass"]{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.card label[for^="pass"]+span{white-space:nowrap;flex-shrink:0;margin-left:.25rem}
+.advopt>summary{list-style:none;display:flex;align-items:center;gap:.25rem;padding:.125rem 0}
+.advopt>summary::-webkit-details-marker{display:none}
+.advopt .chev{transition:transform .15s}.advopt[open] .chev{transform:rotate(180deg)}
+.advopt .advdot{display:none;width:.4rem;height:.4rem;border-radius:50%;background:currentColor;margin-left:.25rem}
+.advopt.set .advdot{display:inline-block}.advopt.danger>summary{color:#ba1a1a}
+.advopt[open]>.pt-space-xs{margin-top:.375rem}
