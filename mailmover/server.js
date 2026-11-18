@@ -36,6 +36,14 @@ const jobs = new Map();
 
 const hhmmss = () => new Date().toISOString().slice(11, 19);
 
+// Master log: one JSON line per event on stdout (Dokploy shows it; read it with docker logs). Never passwords, tokens or mail content;
+// email addresses are cut to their domain and IP addresses are hashed.
+const log = (ev, o) => console.log(JSON.stringify(Object.assign({ t: new Date().toISOString(), ev }, o)));
+const domainOf = (e) => String(e || '').split('@').pop().toLowerCase().slice(0, 100);
+const scrub = (t) => String(t || '').replace(/[A-Za-z0-9._%+-]+@/g, '***@').replace(/eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_.-]+/g, 'MASKED').slice(0, 300);
+const ipHash = (req) => crypto.createHash('sha256').update('mm' + String((req.headers['x-forwarded-for'] || req.socket.remoteAddress || '')).split(',')[0].trim()).digest('hex').slice(0, 8);
+let clientLogs = 0; setInterval(() => { clientLogs = 0; }, 60000).unref();
+
 function validHost(h) {
   return typeof h === 'string' && /^[A-Za-z0-9]([A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$/.test(h);
 }
@@ -137,7 +145,8 @@ function push(job, raw) {
   if (/^msg /.test(text)) {
     if ((m = text.match(/(\d+(?:\.\d+)?) msgs\/s/))) s.speed = parseFloat(m[1]);
   }
-  if (k === 'err') s.errors += 1;
+  if ((m = text.match(/^Messages transferred\s+: (\d+)/))) s.moved = parseInt(m[1], 10);
+  if (k === 'err') { s.errors += 1; if ((job.errLogged = (job.errLogged || 0) + 1) <= 10) log('run_error_line', { id: job.id.slice(0, 8), line: scrub(text) }); }
   if (/Basic authentication is disabled/.test(text)) s.hint = 'Microsoft 365 no longer accepts passwords for IMAP. This mailbox needs a Microsoft login token instead.';
   if (/Could not connect|Connection refused|timed out/i.test(text) && !s.hint) s.hint = 'Could not reach a server. Check the server name and that it accepts IMAP connections (port 993).';
   job.dirty = true;
@@ -216,6 +225,7 @@ function finish(job, code, sig) {
     if (code === 161 && !job.stats.hint) job.stats.hint = 'The source login failed. Check the email and password.';
     if (code === 162 && !job.stats.hint) job.stats.hint = 'The destination login failed. Check the email and password.';
   }
+  log('run_end', { id: job.id.slice(0, 8), mode: job.mode, status: job.status, code, sig: sig || null, secs: Math.round((Date.now() - job.startedAt) / 1000), total: job.stats.total, done: job.stats.done, moved: job.stats.moved == null ? null : job.stats.moved, errors: job.stats.errors, hint: job.stats.hint || null, folders: job.folders.size });
   for (const f of ['p1', 'p2']) fs.rm(path.join(job.dir, f), { force: true }, () => {});
   fs.rm(job.dir, { recursive: true, force: true }, () => {});
   if (job.timer) { clearTimeout(job.timer); job.timer = null; }
@@ -231,7 +241,7 @@ function readBody(req, limit = 20000) {
   });
 }
 
-const json = (res, code, obj) => { res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(obj)); };
+const json = (res, code, obj) => { res.mmErr = obj && obj.error; res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(obj)); };
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 
@@ -241,6 +251,7 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === 'POST' && (p === '/api/run' || p === '/api/test')) {
       const b = await readBody(req);
+      res.on('finish', () => { if (res.statusCode >= 400) log('run_reject', { status: res.statusCode, why: res.mmErr, mode: b.mode || (p === '/api/test' ? 'check' : null), h1: String(b.host1 || '').slice(0, 80), h2: String(b.host2 || '').slice(0, 80), ip: ipHash(req) }); });
       const input = {
         mode: p === '/api/test' ? 'check' : (MODES[b.mode] ? b.mode : (b.dry === false ? 'sync' : 'dry')),
         host1: String(b.host1 || '').trim(), user1: String(b.user1 || '').trim(), pass1: b.pass1,
@@ -260,7 +271,13 @@ const server = http.createServer(async (req, res) => {
         try { input.token = await msToken(); } catch (e) { return json(res, 502, { error: 'Could not sign in to Microsoft 365: ' + e.message }); }
       }
       const job = startJob(input);
+      log('run_start', { id: job.id.slice(0, 8), mode: input.mode, h1: input.host1, h2: input.host2, d1: domainOf(input.user1), d2: domainOf(input.user2), move: input.move, strict: input.strict, extra: input.extra.length, sub: !!(input.sub1 || input.sub2), viaMs, ip: ipHash(req) });
       return json(res, 200, { id: job.id });
+    }
+    if (req.method === 'POST' && p === '/api/clientlog') {
+      const b = await readBody(req, 4000);
+      if (++clientLogs <= 20) log('client_error', { page: String(b.page || '').slice(0, 60), msg: scrub(b.msg), src: String(b.src || '').slice(0, 80), line: +b.line || 0, ua: String(req.headers['user-agent'] || '').slice(0, 80) });
+      res.writeHead(204); return res.end();
     }
     if (req.method === 'GET' && p === '/api/config') return json(res, 200, { m365: msConfigured(), running: runningCount(), max: MAX_RUNNING });
     let m = p.match(/^\/api\/jobs\/([0-9a-f]{32})\/(stream|stop|pause|log)$/);
@@ -305,6 +322,7 @@ const server = http.createServer(async (req, res) => {
     }
     res.writeHead(404); res.end('Not found');
   } catch (e) {
+    log('server_error', { path: p, msg: scrub(e && e.message) });
     if (!res.headersSent) json(res, 400, { error: 'Bad request.' });
   }
 });
@@ -315,4 +333,4 @@ setInterval(() => {
 }, 600000).unref();
 
 process.on('SIGTERM', () => { for (const j of jobs.values()) if (j.proc && j.status === 'running') j.proc.kill('SIGTERM'); process.exit(0); });
-server.listen(PORT, '0.0.0.0', () => console.log('MailMover listening on ' + PORT));
+server.listen(PORT, '0.0.0.0', () => { console.log('MailMover listening on ' + PORT); log('server_start', { port: PORT, max: MAX_RUNNING, m365: msConfigured() }); });
