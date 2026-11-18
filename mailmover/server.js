@@ -53,7 +53,7 @@ const EXTRA_OK = {
   '--nofoldersizesatend': 0, '--useuid': 0, '--nosyncacls': 0, '--syncacls': 0, '--noabletosearch': 0,
   '--prefix1': 1, '--prefix2': 1, '--sep1': 1, '--sep2': 1, '--nosyncinternaldates': 0, '--skipcrossduplicates': 0,
   '--regextrans2': 1, '--maxmessagespersecond': 1, '--maxbytespersecond': 1, '--buffersize': 1, '--delete2duplicates': 0,
-  '--skipemptyfolders': 0, '--addheader': 0, '--noresyncflags': 0
+  '--skipemptyfolders': 0, '--addheader': 0, '--noresyncflags': 0, '--subscribed': 0
 };
 function parseExtra(text) {
   const toks = [];
@@ -295,7 +295,8 @@ const server = http.createServer(async (req, res) => {
       return fs.readFile(file, (err, data) => {
         if (err) { res.writeHead(404); return res.end('Not found'); }
         res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
-        res.end(data);
+        // the layout switcher (Rail / Console / Stitch) is added to the main page without editing it
+        res.end(rel === 'index.html' ? data.toString().replace('</body>', '<script src="/switch.js"></script></body>') : data);
       });
     }
     res.writeHead(404); res.end('Not found');
