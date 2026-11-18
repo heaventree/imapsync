@@ -12,8 +12,43 @@
   var kept=load();
   KEEP.forEach(function(k){var el=$(k);if(!el)return;if(kept[k]&&!el.value){el.value=kept[k];el.dispatchEvent(new Event('input',{bubbles:true}));}el.addEventListener('input',save);el.addEventListener('change',save);});
   $('swap')&&$('swap').addEventListener('click',function(){setTimeout(save,0);});
+  /* Transfer / Move instead of Sync: Transfer copies and keeps the old mailbox, Move copies and then deletes from the old one */
+  var base=modeEl('sync'),adv=!!$('goTxt'),mvBox=$('move'),stBox=$('strict');
+  function setText(l,title,desc,icon){
+    var a=l.querySelector('.font-label-md')||l.querySelector('b'),d=l.querySelector('.hide-short')||l.querySelector('.d'),ic=l.querySelector('.material-symbols-outlined');
+    if(a)a.textContent=title;if(d)d.textContent=desc;l.title=desc;if(ic&&icon)ic.textContent=icon;
+  }
+  var TR='Copy everything to the new mailbox. The old one is kept.',MV='Copy everything, then delete it from the old mailbox.';
+  if(base){
+    var bl=base.closest('label'),mc=bl.cloneNode(true),mi=mc.querySelector('input');
+    mi.checked=false;mi.setAttribute('data-move','1');bl.parentNode.insertBefore(mc,bl.nextSibling);
+    setText(bl,'Transfer',TR,'send');setText(mc,'Move',MV,'drive_file_move');
+  }
+  function curMode(){return document.querySelector('input[name=mode]:checked');}
+  function relabel(){
+    var c=curMode();if(!c||c.value!=='sync')return;var mv=c.hasAttribute('data-move');
+    var g=$('goTxt')||$('go');if(g)g.textContent=adv?(mv?'Start Move':'Start Transfer'):(mv?'Start move':'Start transfer');
+    var n=$('modeNote');if(n)n.textContent='Selected: '+(mv?'Move copies every message, then deletes it from the source':'Transfer copies every message to the destination and keeps the source');
+    var ml=$('modelbl');if(ml)ml.textContent=mv?'Move':'Transfer';
+  }
+  document.addEventListener('change',function(e){
+    var t=e.target;
+    if(t&&t.name==='mode'){if(mvBox)mvBox.checked=t.hasAttribute('data-move');setTimeout(relabel,0);}
+    else if(t===mvBox){var c=curMode();if(c&&c.value==='sync'){var want=document.querySelector('input[name=mode][value=sync]'+(mvBox.checked?'[data-move]':':not([data-move])'));if(want&&!want.checked)want.click();}}
+  },true);
+  var lm=document.querySelector('label[for=move]');if(lm&&adv)lm.textContent='Move (deletes source messages after they are copied)';
+  var ls=document.querySelector('label[for=strict]');if(ls&&adv)ls.textContent='Strict (purge target messages absent from source)';
+  var wm=$('w-move'),ws=$('w-strict');
+  if(wm){var b1=wm.querySelector('b');if(b1)b1.textContent='Move.';}
+  if(ws){var b2=ws.querySelector('b');if(b2)b2.textContent='Strict.';}
+  /* live view wording */
+  function fix(id,fn){var el=$(id);if(!el)return;var ob=new MutationObserver(function(){var t=el.textContent,v=fn(t);if(v!==t){ob.disconnect();el.textContent=v;ob.observe(el,{childList:true,characterData:true,subtree:true});}});ob.observe(el,{childList:true,characterData:true,subtree:true});}
+  var word=function(){return mvBox&&mvBox.checked?'Move':'Transfer';};
+  fix('dMode',function(t){return t==='Full Sync'?word():t;});
+  fix('pillTxt',function(t){return t.replace(/\bSYNC\b/,word().toUpperCase());});
+  fix('fsync',function(t){return t.replace('SYNCHRONIZING','TRANSFERRING');});
   /* 1. live transfer is the default, not a dry run */
-  setMode('sync');
+  setMode('sync');relabel();
   var e1=$('empty'),e2=$('termEmpty');
   if(e1)e1.textContent='Your transfer shows up here as it runs.';
   if(e2)e2.textContent='Your transfer shows up here as it runs.';
@@ -44,8 +79,11 @@
     if(ok){ok=false;return;}
     if(mode()!=='sync')return;
     e.preventDefault();e.stopImmediatePropagation();
-    toast('warn','This is a live transfer','Messages will be copied to the destination mailbox. If you would rather check first, run a dry run: it shows what would happen and copies nothing.',[
-      ['Start live transfer',function(){ok=true;form.requestSubmit();},true],
+    var mv=mvBox&&mvBox.checked,sx=stBox&&stBox.checked;
+    var go=function(){ok=true;if(mv||sx){var oc=window.confirm;window.confirm=function(){return true;};try{form.requestSubmit();}finally{window.confirm=oc;}}else form.requestSubmit();};
+    var txt=mv||sx?'Messages will be copied to the new mailbox'+(mv?' and then deleted from the old one':'')+(sx?', and messages missing from the old mailbox will be deleted from the new one':'')+'. Deleted messages cannot be recovered through MailMover. If you are not sure, run a dry run first: it shows what would happen and changes nothing.':'Messages will be copied to the new mailbox. Nothing is deleted from the old one. If you would rather check first, run a dry run: it shows what would happen and copies nothing.';
+    toast('warn',mv||sx?'This will delete mail':'This is a live transfer',txt,[
+      [mv?'Move my mail':sx?'Start and delete':'Start live transfer',go,true],
       ['Dry run first',function(){setMode('dry');ok=true;form.requestSubmit();}]
     ]);
   },true);
@@ -54,11 +92,11 @@
   var rf=window.fetch;
   window.fetch=function(u,o){
     var p=rf.apply(this,arguments);
-    try{if(typeof u==='string'&&/^\/api\/(run|test)$/.test(u)&&o&&o.method==='POST'){var m=JSON.parse(o.body||'{}').mode;p.then(function(r){return r.clone().json();}).then(function(j){if(j&&j.id)watch(j.id,u==='/api/test'?'check':m);}).catch(function(){});}}catch(e){}
+    try{if(typeof u==='string'&&/^\/api\/(run|test)$/.test(u)&&o&&o.method==='POST'){var bd=JSON.parse(o.body||'{}'),m=bd.mode;p.then(function(r){return r.clone().json();}).then(function(j){if(j&&j.id)watch(j.id,u==='/api/test'?'check':m,!!bd.move);}).catch(function(){});}}catch(e){}
     return p;
   };
   function n(v){return Number(v).toLocaleString();}
-  function watch(id,m){
+  function watch(id,m,mv){
     close();var moved=null,es=new EventSource('/api/jobs/'+id+'/stream'),fin=false;
     es.addEventListener('line',function(ev){try{var l=JSON.parse(ev.data),x=/^Messages transferred: (\d+)/.exec(l.m||'');if(x)moved=+x[1];}catch(e){}});
     es.addEventListener('state',function(ev){
@@ -67,7 +105,8 @@
       var t=s.stats||{},md=s.mode||m,src=t.source||'the source',dst=t.dest||'the destination';
       if(s.status==='done'){
         if(md==='sync'){
-          if(t.errors)toast('warn','Finished, but with '+n(t.errors)+' error'+(t.errors===1?'':'s'),'Some items may not have copied. Open the log and choose Errors before relying on this transfer.');
+          if(t.errors)toast('warn',(mv?'Move':'Transfer')+' finished, but with '+n(t.errors)+' error'+(t.errors===1?'':'s'),'Some items may not have copied. Open the log and choose Errors before relying on this transfer.');
+          else if(mv)toast('ok','Move complete',(moved?'Moved '+n(moved)+' message'+(moved===1?'':'s')+' from '+src+' to '+dst+' and removed them from the old mailbox. ':'Nothing new to move: '+dst+' already has everything from '+src+'. ')+'No errors. Open the new mailbox to check.');
           else toast('ok','Transfer complete',(moved?'Copied '+n(moved)+' message'+(moved===1?'':'s')+' from '+src+' to '+dst+'. ':'Nothing new to copy: '+dst+' already matches '+src+'. ')+'No errors. Open the destination mailbox to check. You can run this again any time to copy anything new.');
         }else if(md==='dry'){
           toast('ok','Dry run finished: nothing was copied','The log shows what a live transfer would do. When you are ready, switch to a live transfer.',[['Switch to live transfer',function(){setMode('sync');},true]]);
@@ -80,4 +119,8 @@
     });
     es.onerror=function(){if(fin)es.close();};
   }
+  /* browser errors go to the master log (no field values) */
+  function report(msg,src,line){try{navigator.sendBeacon('/api/clientlog',new Blob([JSON.stringify({page:location.pathname,msg:String(msg).slice(0,300),src:String(src||'').slice(-80),line:line||0})],{type:'application/json'}));}catch(e){}}
+  window.addEventListener('error',function(e){report(e.message,e.filename,e.lineno);});
+  window.addEventListener('unhandledrejection',function(e){report('promise: '+(e.reason&&e.reason.message||e.reason),'',0);});
 })();
