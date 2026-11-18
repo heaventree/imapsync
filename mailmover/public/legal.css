@@ -1,5 +1,6 @@
-:root{color-scheme:light;--bg:#F4F3EF;--ink:#16191D;--mute:#5B636B;--line:#DEDCD3;--card:#fff;--teal:#0F766E;--chip:#E8E6DE}
-/* Light theme only for now; a universal dark theme comes later */
+@import url(/dark.css) (prefers-color-scheme:dark);
+:root{--bg:#F4F3EF;--ink:#16191D;--mute:#5B636B;--line:#DEDCD3;--card:#fff;--teal:#0F766E;--chip:#E8E6DE}
+/* Dark theme comes from dark.css (imported above) when the system prefers dark */
 *{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 a{color:var(--teal)}
