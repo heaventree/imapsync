@@ -82,3 +82,6 @@
   #v-setup .card.space-y-space-sm>*+*{margin-top:1.25rem!important}
   #v-setup .space-y-space-md>*+*{margin-top:1.5rem!important}
 }
+
+/* Six run modes (Transfer and Move are separate): keep them on one row */
+@media (min-width:1024px){#modes{grid-template-columns:repeat(6,minmax(0,1fr))!important}}
