@@ -43,3 +43,22 @@
 
 /* Saved presets deferred to phase II: we state nothing is stored */
 #btnPresets{display:none!important}
+
+/* Live monitor, desktop: compact the stack so the console gets the height */
+@media (min-width:1024px){
+  #toprow .livegrp{margin-left:auto;flex-wrap:nowrap}
+  #v-live>div{padding-top:.375rem!important;padding-bottom:.375rem!important;gap:.375rem!important}
+  #v-live>div>div:first-child{padding:.5rem .75rem!important}
+  #v-live>div>div:first-child>div:first-child{gap:.5rem}
+  #v-live>div>div:first-child>div:nth-child(2){margin-top:.375rem!important;padding:.375rem .625rem!important}
+  #v-live .grid.lg\:grid-cols-5{gap:.375rem!important}
+  #v-live .grid.lg\:grid-cols-5>div{flex-direction:row!important;align-items:center;justify-content:flex-start!important;gap:.5rem;padding:.375rem .625rem!important}
+  #v-live .grid.lg\:grid-cols-5>div>div:first-child{margin:0!important;gap:.375rem}
+  #v-live .grid.lg\:grid-cols-5>div>div:first-child .material-symbols-outlined,#v-live .grid.lg\:grid-cols-5>div>div:last-child:not(:nth-child(2)){display:none}
+  #v-live .grid.lg\:grid-cols-3{gap:.375rem!important}
+  #v-live .grid.lg\:grid-cols-3>div{padding:.375rem .625rem!important}
+}
+@media (min-width:1024px){
+  #v-live>div>div:first-child>div:first-child>div:first-child{flex-direction:row!important;align-items:center;gap:1rem}
+  #v-live>div>div:first-child>div:first-child>div:first-child>div:nth-child(2){margin-top:0!important}
+}

@@ -6,7 +6,16 @@
   var row=document.createElement('div');row.id='toprow';
   nav.parentNode.insertBefore(row,nav);row.appendChild(nav);
   var mq=window.matchMedia('(min-width:1024px)'),top=false;
-  function sync(){if(top)tc.style.display=v.classList.contains('on')?'':'none';}
+  var pause=document.getElementById('pause'),lg=pause?pause.parentNode:null,lgp=lg?lg.parentNode:null,lgn=lg?lg.nextSibling:null,inRow=false;
+  function sync(){
+    var setupOn=v.classList.contains('on');
+    if(top)tc.style.display=setupOn?'':'none';
+    /* Live monitor: Pause / Abort / Auto-scroll join the tab row so the status card shrinks */
+    if(lg){
+      if(top&&!setupOn&&!inRow){row.appendChild(lg);lg.classList.add('livegrp');inRow=true;}
+      else if((!top||setupOn)&&inRow){lgp.insertBefore(lg,lgn);lg.classList.remove('livegrp');inRow=false;}
+    }
+  }
   var go=document.getElementById('go'),test=document.getElementById('test'),dry=document.getElementById('btnDryTop');
   var grp=dry?dry.parentNode:null,gp=go?go.parentNode:null,gn=go?go.nextSibling:null,tp=test?test.parentNode:null,tn=test?test.nextSibling:null;
   if(go)go.setAttribute('form','form');
