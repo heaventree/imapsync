@@ -1,0 +1,26 @@
+:root{--bg:#F4F3EF;--ink:#16191D;--mute:#5B636B;--line:#DEDCD3;--card:#fff;--teal:#0F766E;--chip:#E8E6DE}
+@media (prefers-color-scheme:dark){:root{--bg:#111416;--ink:#ECEBE6;--mute:#A0A8AF;--line:#2A2F33;--card:#181C1F;--teal:#2DD4BF;--chip:#22272B}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--teal)}
+header{border-bottom:1px solid var(--line);background:var(--card)}
+.bar{max-width:880px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:700}
+.logo i{width:28px;height:28px;border-radius:7px;background:var(--teal);color:#fff;display:grid;place-items:center;font-style:normal;font-weight:800}
+.bar .sp{flex:1}.bar .app{font-size:13px;text-decoration:none;font-weight:600}
+main{max-width:880px;margin:0 auto;padding:36px 20px 56px}
+h1{font-size:32px;line-height:1.2;margin:0 0 6px}
+.meta{color:var(--mute);font-size:13px;margin:0 0 14px}
+.lead{color:var(--mute);margin:0 0 28px}
+h2{font-size:18px;margin:34px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+h3{font-size:15px;margin:18px 0 6px}
+p{margin:0 0 12px;color:var(--mute)}li{color:var(--mute);margin:0 0 6px}
+strong{color:var(--ink)}ul{padding-left:20px;margin:0 0 12px}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:10px 0 14px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mute)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:var(--chip);color:var(--mute)}td:first-child{color:var(--ink);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;margin:12px 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card h3{margin:0 0 6px;color:var(--ink)}.card p{margin:0;font-size:14px}
+footer{border-top:1px solid var(--line);margin-top:40px;padding-top:18px;font-size:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.copy{color:var(--mute);font-size:13px;margin-top:14px}
