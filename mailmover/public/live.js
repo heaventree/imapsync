@@ -5,6 +5,13 @@
   function modeEl(v){return document.querySelector('input[name=mode][value='+v+']');}
   function mode(){var c=document.querySelector('input[name=mode]:checked');return c?c.value:'';}
   function setMode(v){var r=modeEl(v);if(r&&!r.checked)r.click();}
+  /* 0. keep what was typed for this browser tab (sessionStorage: gone when the tab closes, never sent to the server), so a test run or a layout switch does not wipe the form */
+  var KEEP=['host1','user1','pass1','host2','user2','pass2','sub1','sub2','sep1','extra'],SK='mm-fields';
+  function load(){try{return JSON.parse(sessionStorage.getItem(SK)||'{}');}catch(e){return {};}}
+  function save(){var o={};KEEP.forEach(function(k){var el=$(k);if(el&&el.value)o[k]=el.value;});try{sessionStorage.setItem(SK,JSON.stringify(o));}catch(e){}}
+  var kept=load();
+  KEEP.forEach(function(k){var el=$(k);if(!el)return;if(kept[k]&&!el.value){el.value=kept[k];el.dispatchEvent(new Event('input',{bubbles:true}));}el.addEventListener('input',save);el.addEventListener('change',save);});
+  $('swap')&&$('swap').addEventListener('click',function(){setTimeout(save,0);});
   /* 1. live transfer is the default, not a dry run */
   setMode('sync');
   var e1=$('empty'),e2=$('termEmpty');
