@@ -46,3 +46,4 @@ input,select,textarea{background:#0b1020!important;color:var(--d4)!important;bor
 input::placeholder{color:#6b7280!important}
 .footbar{background:var(--d1)!important}
 ::-webkit-scrollbar-thumb{background:#2b3647}
+.mmtheme{background:#101522!important;color:#f9fafb!important;border-color:#2b3647!important}
