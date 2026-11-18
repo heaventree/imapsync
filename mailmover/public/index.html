@@ -4,136 +4,298 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>MailMover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#F6F5F1;--ink:#1B1F24;--mute:#5B636B;--line:#E2E0D8;--card:#FFFFFF;--accent:#0F766E;--accent-ink:#FFFFFF;--field:#C9C6BB;--log:#11161B;--log-line:#232B33;--log-ink:#CBD5E1;--log-mute:#9FB3C8;--ok:#4ADE80;--warn:#FBBF24;--err:#F87171;--bar:#2DD4BF}
+:root{--bg:#F6F5F1;--ink:#16191D;--mute:#5B636B;--line:#E2E0D8;--card:#FFFFFF;--accent:#0F766E;--field:#C9C6BB;--log:#11161B;--ll:#232B33;--lk:#CBD5E1;--lm:#9FB3C8;--ok:#4ADE80;--warn:#FBBF24;--err:#F87171;--bar:#2DD4BF}
 *{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;min-height:100vh}
-header{height:60px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 28px;border-bottom:1px solid var(--line);background:var(--card)}
-.logo{width:28px;height:28px;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center}
-header b{font-size:16px}
-main{flex:1;min-height:0;display:flex;gap:24px;padding:24px 28px;height:calc(100vh - 60px)}
-.feed{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--log);border-radius:14px;overflow:hidden;position:relative}
-.top{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--log-line);flex-wrap:wrap}
-.dot{width:10px;height:10px;border-radius:99px;background:#64748B;flex-shrink:0}
-.dot.running{background:var(--ok)}.dot.done{background:var(--ok)}.dot.failed{background:var(--err)}.dot.stopped{background:var(--warn)}
-.title{color:#F1F5F9;font-weight:600;font-size:15px}
-.sub{color:var(--log-mute);font-size:13px;overflow-wrap:anywhere}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;height:100dvh;font-size:14px}
+button,input{font:inherit;color:inherit}
+input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #5EEAD4;outline-offset:1px}
+
+/* header */
+header{height:52px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--card)}
+.logo{width:26px;height:26px;border-radius:7px;background:var(--accent);color:#fff;font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+header b{font-size:15px}
+.tag{color:var(--mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .sp{flex:1}
-.btn{font:inherit;font-size:13px;color:#E2E8F0;background:#1C242C;border:1px solid #2E3943;border-radius:8px;padding:8px 12px;cursor:pointer;min-height:36px}
-.btn:disabled{opacity:.45;cursor:default}
-.prog{padding:16px 20px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--log-line)}
-.row{display:flex;justify-content:space-between;gap:12px;color:var(--log-ink);font-size:13px}
+.slots{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);white-space:nowrap}
+.slots i{width:7px;height:7px;border-radius:99px;background:#9A9A90}.slots i.on{background:#1F8A5B}
+.seg{display:flex;border:1px solid var(--field);border-radius:8px;overflow:hidden;background:#fff;flex-shrink:0}
+.seg button{border:0;background:#fff;height:30px;padding:0 11px;font-size:12.5px;font-weight:500;cursor:pointer}
+.seg button+button{border-left:1px solid var(--field)}
+.seg button[aria-pressed=true]{background:var(--ink);color:#fff}
+
+/* main grid */
+main{flex:1;min-height:0;display:grid;gap:16px;padding:16px 20px;overflow:hidden}
+body[data-layout=rail] main{grid-template-columns:minmax(0,1fr) 400px}
+body[data-layout=rail] .live{order:1}
+body[data-layout=rail] .setup{order:2}
+body[data-layout=console] main{grid-template-rows:auto minmax(0,1fr)}
+body[data-layout=console] .setup{order:1}
+body[data-layout=console] .live{order:2}
+
+.setup{background:var(--card);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}
+.live{display:grid;min-height:0;min-width:0;background:var(--log);border-radius:12px;overflow:hidden;position:relative}
+body[data-layout=rail] .live{grid-template-rows:auto auto auto auto minmax(0,1fr);grid-template-areas:"head""prog""stats""folders""log"}
+body[data-layout=console] .live{grid-template-columns:300px minmax(0,1fr);grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"folders head""folders prog""folders stats""folders log"}
+
+/* setup */
+.tabs{display:flex;gap:22px;padding:0 18px;border-bottom:1px solid var(--line);flex-shrink:0}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;height:42px;padding:0;margin-bottom:-1px;font-weight:500;color:var(--mute);cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--ink);font-weight:600;border-color:var(--accent)}
+.tabs small{margin-left:6px;font-size:11.5px;color:var(--mute);font-weight:400}
+.panes{flex:1;min-height:0;display:flex}
+.pane{padding:14px 18px;display:flex;flex-direction:column;gap:10px;min-width:0;flex:1}
+body[data-layout=rail] .pane{overflow-y:auto}
+body[data-layout=rail] .pane[hidden]{display:none}
+.acct{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ah{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ah span.k{font-size:11.5px;font-weight:600;letter-spacing:.06em;color:var(--mute)}
+.pre{font-size:11.5px;border:1px solid var(--field);background:#fff;border-radius:99px;padding:2px 9px;cursor:pointer;color:var(--mute)}
+.pre:hover{color:var(--accent);border-color:var(--accent)}
+.fl{display:flex;flex-direction:column;gap:4px;font-size:12.5px;font-weight:500;min-width:0}
+input[type=text],input[type=password]{width:100%;height:34px;padding:0 10px;border:1px solid var(--field);border-radius:7px;background:#fff;font-size:13.5px}
+.swap{align-self:center;border:1px solid var(--field);background:#fff;border-radius:99px;width:34px;height:34px;cursor:pointer;color:var(--mute);flex-shrink:0}
+.swap:hover{color:var(--accent);border-color:var(--accent)}
+body[data-layout=rail] .swap{width:auto;height:30px;padding:0 12px;border-radius:7px;font-size:12.5px}
+body[data-layout=rail] .swap .t{display:inline}
+.swap .t{display:none}
+.chk{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.4;cursor:pointer}
+.chk input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--accent);flex-shrink:0}
+.chk span span{color:var(--mute)}
+.lbl{font-size:11.5px;font-weight:600;letter-spacing:.06em;color:var(--mute)}
+.modes{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.modes label{display:flex;gap:10px;align-items:flex-start;padding:8px 11px;cursor:pointer;font-size:13px;border-top:1px solid #ECEAE2}
+.modes label:first-child{border-top:0}
+.modes label:has(input:checked){background:#EAF3F1}
+.modes input{accent-color:var(--accent);margin:2px 0 0}
+.modes small{display:block;color:var(--mute);font-size:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.foot{padding:12px 18px;border-top:1px solid var(--line);background:#FBFAF7;display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.btns{display:flex;gap:10px}
+.go{flex:1;height:40px;border:0;border-radius:9px;background:var(--accent);color:#fff;font-weight:600;font-size:14.5px;cursor:pointer}
+.alt{height:40px;padding:0 14px;border:1px solid var(--field);border-radius:9px;background:#fff;font-weight:500;cursor:pointer}
+.go:disabled,.alt:disabled{opacity:.5;cursor:default}
+.note{font-size:11.5px;color:var(--mute);line-height:1.45}
+.err{color:#B42318;font-size:12.5px;min-height:0}
+.err:empty{display:none}
+
+/* console layout: setup across the top */
+body[data-layout=console] .tabs{display:none}
+body[data-layout=console] .panes{flex-direction:column}
+body[data-layout=console] .pane[hidden]{display:flex}
+body[data-layout=console] .pane.acc{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px;align-items:end;flex:none}
+body[data-layout=console] .pane.acc .swap{margin-bottom:2px}
+body[data-layout=console] .acct{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 10px}
+body[data-layout=console] .acct .ah{grid-column:1/-1}
+body[data-layout=console] .pane.opt{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-top:0;flex:none}
+body[data-layout=console] .panes{flex:none}
+body[data-layout=console] .setup{flex:none}
+body[data-layout=console] .pane.opt .lbl{display:none}
+body[data-layout=console] .modes{flex-direction:row;border-radius:8px}
+body[data-layout=console] .modes label{border-top:0;border-left:1px solid var(--line);padding:0 11px;height:32px;align-items:center}
+body[data-layout=console] .modes label:first-child{border-left:0}
+body[data-layout=console] .modes small{display:none}
+body[data-layout=console] .modes input{margin:0}
+body[data-layout=console] .pane.opt .chk small{display:none}
+body[data-layout=console] .two{display:contents}
+body[data-layout=console] .pane.opt .fl{flex-direction:row;align-items:center;gap:6px;white-space:nowrap}
+body[data-layout=console] .pane.opt .fl input{width:120px}
+body[data-layout=console] .pane.opt .fl.wide input{width:190px}
+body[data-layout=console] .pane{padding:10px 18px}
+body[data-layout=console] .fx{display:none}
+body[data-layout=console] .foot{flex-direction:row;align-items:center;gap:14px;padding:10px 18px}
+body[data-layout=console] .foot .note{flex:1;order:2}
+body[data-layout=console] .btns{order:3}
+body[data-layout=console] .go{padding:0 22px;flex:none}
+body[data-layout=console] .err{order:1}
+.opt-chk-desc{display:inline}
+body[data-layout=console] .opt-chk-desc{display:none}
+
+/* live */
+.head{grid-area:head;display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--ll);min-width:0;flex-wrap:wrap}
+.dot{width:9px;height:9px;border-radius:99px;background:#64748B;flex-shrink:0}
+.dot.running{background:var(--ok)}.dot.done{background:var(--ok)}.dot.failed{background:var(--err)}.dot.stopped{background:var(--warn)}
+.ttl{color:#F1F5F9;font-weight:600;font-size:14px}
+.who{color:var(--lm);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.lb{border:1px solid #2E3943;background:#1C242C;color:#E2E8F0;border-radius:7px;height:30px;padding:0 11px;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;text-decoration:none}
+.lb:disabled{opacity:.45;cursor:default}
+.prog{grid-area:prog;padding:10px 16px 0;display:flex;flex-direction:column;gap:7px}
+.row{display:flex;justify-content:space-between;gap:10px;color:var(--lk);font-size:12.5px}
 .row b{color:#F1F5F9}
-.bar{height:8px;border-radius:99px;background:var(--log-line);overflow:hidden}
+.bar{height:7px;border-radius:99px;background:var(--ll);overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--bar);transition:width .3s}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.stat{background:#1A2229;border-radius:10px;padding:10px 12px}
-.stat span{display:block;color:var(--log-mute);font-size:12px}
-.stat b{display:block;color:#F1F5F9;font-size:20px;font-weight:600;margin-top:2px}
-.hint{display:none;margin:0 20px 0;padding:10px 12px;border-radius:10px;background:#3B2A12;color:#FDE68A;font-size:13px;line-height:1.5}
-.hint.show{display:block;margin:12px 20px 0}
-.filters{display:flex;gap:8px;padding:12px 20px;border-bottom:1px solid var(--log-line);align-items:center}
-.chip{font:inherit;font-size:12px;color:var(--log-ink);background:#1C242C;border:0;border-radius:99px;padding:6px 12px;cursor:pointer;min-height:32px}
+.stats{grid-area:stats;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;padding:10px 16px 12px;border-bottom:1px solid var(--ll)}
+.stat{background:#1A2229;border-radius:8px;padding:7px 10px;min-width:0}
+.stat span{display:block;color:var(--lm);font-size:11px}
+.stat b{display:block;color:#F1F5F9;font-size:16px;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat b.e{color:var(--ok)}.stat b.e.bad{color:var(--warn)}
+.fold{grid-area:folders;display:flex;flex-direction:column;min-height:0;border-bottom:1px solid var(--ll)}
+body[data-layout=console] .fold{border-bottom:0;border-right:1px solid var(--ll)}
+body[data-layout=rail] .fold{height:172px}
+.fh{display:grid;grid-template-columns:minmax(0,1fr) 64px 64px;gap:8px;padding:7px 16px;font-size:10.5px;letter-spacing:.06em;color:var(--lm);border-bottom:1px solid var(--ll);flex-shrink:0}
+body[data-layout=rail] .fh{grid-template-columns:minmax(0,1fr) 64px 64px 90px 64px}
+.fh span+span{text-align:right}
+.fl2{flex:1;min-height:0;overflow-y:auto}
+.fr{display:grid;grid-template-columns:minmax(0,1fr) 64px 64px;gap:8px;align-items:center;padding:5px 16px;font-size:12.5px;color:var(--lk)}
+body[data-layout=rail] .fr{grid-template-columns:minmax(0,1fr) 64px 64px 90px 64px}
+.fr .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fr .r{text-align:right;color:var(--lm)}
+.fr.copying .n{color:#F1F5F9;font-weight:600}
+.fr .pb{height:4px;border-radius:99px;background:var(--ll);overflow:hidden}
+.fr .pb i{display:block;height:100%;background:var(--bar)}
+.fr.copying .pb i{width:50%;animation:sl 1.2s ease-in-out infinite alternate}
+@keyframes sl{from{margin-left:0}to{margin-left:50%}}
+.fr .st{text-align:right;color:var(--lm);font-size:12px}
+.fr.done .st{color:var(--ok)}
+body[data-layout=console] .fr .pb,body[data-layout=console] .fr .st{display:none}
+body[data-layout=console] .fr{position:relative}
+body[data-layout=console] .fr.done .n::after{content:" \2713";color:var(--ok)}
+body[data-layout=console] .fr.copying .n::after{content:" \2026";color:var(--bar)}
+.fe{color:var(--lm);font-size:12.5px;padding:12px 16px;line-height:1.5}
+.logwrap{grid-area:log;display:flex;flex-direction:column;min-height:0}
+.hint{display:none;margin:8px 16px 0;padding:8px 11px;border-radius:8px;background:#3B2A12;color:#FDE68A;font-size:12.5px;line-height:1.45}
+.hint.show{display:block}
+.filters{display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid var(--ll);align-items:center;flex-shrink:0}
+.chip{border:0;border-radius:99px;background:#1C242C;color:var(--lk);height:26px;padding:0 11px;font-size:12px;cursor:pointer}
 .chip[aria-pressed=true]{background:var(--bar);color:#0B1F1D}
-.log{flex:1;min-height:0;overflow-y:auto;padding:12px 20px;font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.7}
-.ln{display:flex;gap:14px}.ln .t{color:#64748B;flex-shrink:0}.ln .m{color:var(--log-mute);overflow-wrap:anywhere;min-width:0}
+.chip em{font-style:normal;opacity:.7;margin-left:5px}
+.follow{color:var(--lm);font-size:12px}
+.log{flex:1;min-height:0;overflow-y:auto;padding:8px 16px;font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.65}
+.ln{display:flex;gap:12px}.ln .t{color:#64748B;flex-shrink:0}.ln .m{color:var(--lm);overflow-wrap:anywhere;min-width:0}
 .ln.key .m{color:#E2E8F0}.ln.ok .m{color:var(--ok)}.ln.warn .m{color:var(--warn)}.ln.err .m{color:var(--err)}
-.empty{color:var(--log-mute);font-family:inherit;font-size:14px;line-height:1.6;padding:24px 0}
-.jump{position:absolute;right:20px;bottom:16px;display:none}
-.jump.show{display:block}
-aside{width:420px;flex-shrink:0;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-form{display:flex;flex-direction:column;min-height:0;flex:1}
-.fields{flex:1;min-height:0;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:18px}
-fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;min-width:0}
-legend{font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--mute);padding:0;margin-bottom:10px}
-.f{display:flex;flex-direction:column;gap:6px}
-label{font-size:13px;font-weight:500}
-input[type=text],input[type=password],input[type=email]{font:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--field);border-radius:8px;background:#fff;color:var(--ink);width:100%;min-height:44px}
-input:focus-visible,button:focus-visible{outline:3px solid #5EEAD4;outline-offset:2px}
-hr{border:0;border-top:1px solid #ECEAE2;margin:0;width:100%}
-.chk{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:400}
-.chk input{width:18px;height:18px;accent-color:var(--accent)}
-.err{color:#B42318;font-size:13px;min-height:1em}
-.actions{padding:16px 22px;border-top:1px solid var(--line);background:#FBFAF7;display:flex;gap:10px}
-.go{flex:1;font:inherit;font-size:15px;font-weight:600;color:var(--accent-ink);background:var(--accent);border:0;border-radius:10px;padding:12px 16px;cursor:pointer;min-height:44px}
-.go:disabled{opacity:.5;cursor:default}
-.alt{font:inherit;font-size:14px;font-weight:500;color:var(--ink);background:#fff;border:1px solid var(--field);border-radius:10px;padding:12px 16px;cursor:pointer;min-height:44px}
-.alt:disabled{opacity:.5;cursor:default}
-.note{font-size:12px;color:var(--mute);line-height:1.5}
+.empty{color:var(--lm);font-family:inherit;font-size:13px;line-height:1.6;padding:14px 0}
+.jump{position:absolute;right:16px;bottom:12px;display:none}.jump.show{display:inline-flex}
+
+/* phone: one screen, switch between Setup and Live */
+.mtabs{display:none}
 @media (max-width:900px){
-  main{flex-direction:column-reverse;height:auto;padding:16px}
-  aside{width:100%}
-  .feed{min-height:70vh}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  header{padding:0 16px}
+  .tag,.slots{display:none}
+  .mtabs{display:flex;gap:4px;padding:4px;margin:10px 12px 0;background:#E8E6DE;border-radius:10px;flex-shrink:0}
+  .mtabs button{flex:1;border:0;background:transparent;border-radius:7px;height:36px;font-weight:500;cursor:pointer}
+  .mtabs button[aria-selected=true]{background:#fff;font-weight:600}
+  main,body[data-layout=console] main,body[data-layout=rail] main{display:block;padding:10px 12px 12px;position:relative}
+  .setup,.live{position:absolute;inset:10px 12px 12px;display:flex}
+  .live{display:grid}
+  body[data-m=live] .setup,body[data-m=setup] .live{display:none}
+  body[data-layout] .live{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto auto minmax(0,1fr);grid-template-areas:"head""prog""stats""folders""log"}
+  body[data-layout] .fold{height:120px;border-right:0;border-bottom:1px solid var(--ll)}
+  .stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  body[data-layout] .fh,body[data-layout] .fr{grid-template-columns:minmax(0,1fr) 56px 56px}
+  body[data-layout] .fx,body[data-layout] .fr .pb,body[data-layout] .fr .st{display:none}
+  .who{display:none}
+  .stat:nth-child(n+4){display:none}
+  body[data-layout=console] .pane.acc{display:flex;flex-direction:column;align-items:stretch}
+  body[data-layout=console] .tabs{display:flex}
+  body[data-layout] .panes{overflow-y:auto}
+  .seg{display:none}
 }
 </style>
 </head>
-<body>
-<header><div class="logo" aria-hidden="true">M</div><b>MailMover</b></header>
+<body data-layout="rail" data-m="setup">
+<header>
+  <div class="logo" aria-hidden="true">M</div><b>MailMover</b>
+  <span class="tag">Copy a complete mailbox to another, without duplicates</span>
+  <div class="sp"></div>
+  <span class="slots" id="slots" title="Transfers running on this server"></span>
+  <div class="seg" role="group" aria-label="Layout">
+    <button type="button" id="lay-rail" aria-pressed="true">Rail</button>
+    <button type="button" id="lay-console" aria-pressed="false">Console</button>
+  </div>
+</header>
+<div class="mtabs" role="tablist"><button type="button" id="mt-setup" aria-selected="true">Setup</button><button type="button" id="mt-live" aria-selected="false">Live</button></div>
 <main>
-<section class="feed" aria-label="Transfer progress">
-  <div class="top">
+<section class="live" aria-label="Transfer progress">
+  <div class="head">
     <div class="dot" id="dot" aria-hidden="true"></div>
-    <div class="title" id="title">No transfer yet</div>
-    <div class="sub" id="who"></div>
+    <div class="ttl" id="title">No transfer yet</div>
+    <div class="who" id="who"></div>
     <div class="sp"></div>
-    <button class="btn" id="pause" type="button" disabled>Pause</button>
-    <button class="btn" id="stop" type="button" disabled>Stop</button>
-    <a class="btn" id="dl" style="text-decoration:none;display:none;align-items:center" download>Download log</a>
+    <button class="lb" id="pause" type="button" disabled>Pause</button>
+    <button class="lb" id="stop" type="button" disabled>Stop</button>
+    <a class="lb" id="dl" style="display:none" download>Download log</a>
   </div>
   <div class="prog" aria-live="polite">
-    <div class="row"><div id="where">Fill in the form and start.</div><b id="pct">0%</b></div>
+    <div class="row"><div id="where">Fill in both accounts and start.</div><b id="pct">0%</b></div>
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barwrap"><i id="bar"></i></div>
-    <div class="stats">
-      <div class="stat"><span>Copied</span><b id="s-done">0</b></div>
-      <div class="stat"><span>Remaining</span><b id="s-left">0</b></div>
-      <div class="stat"><span>Speed</span><b id="s-speed">0 msg/s</b></div>
-      <div class="stat"><span>Errors</span><b id="s-err">0</b></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><span>Copied</span><b id="s-done">0</b></div>
+    <div class="stat"><span>Remaining</span><b id="s-left">–</b></div>
+    <div class="stat"><span>Speed</span><b id="s-speed">0 msg/s</b></div>
+    <div class="stat"><span>Time left</span><b id="s-eta">–</b></div>
+    <div class="stat"><span>Errors</span><b class="e" id="s-err">0</b></div>
+  </div>
+  <div class="fold" aria-label="Folders">
+    <div class="fh"><span id="fcount">FOLDERS</span><span>MESSAGES</span><span>SIZE</span><span class="fx">PROGRESS</span><span class="fx">STATUS</span></div>
+    <div class="fl2" id="folders"><div class="fe">Folders appear here once the source is connected.</div></div>
+  </div>
+  <div class="logwrap">
+    <div class="hint" id="hint" role="status"></div>
+    <div class="filters">
+      <button class="chip" type="button" data-f="hi" aria-pressed="true">Highlights<em id="c-hi">0</em></button>
+      <button class="chip" type="button" data-f="all" aria-pressed="false">Everything<em id="c-all">0</em></button>
+      <button class="chip" type="button" data-f="warn" aria-pressed="false">Warnings<em id="c-warn">0</em></button>
+      <button class="chip" type="button" data-f="err" aria-pressed="false">Errors<em id="c-err">0</em></button>
+      <div class="sp"></div><span class="follow" id="follow">Following latest</span>
     </div>
+    <div class="log" id="log" tabindex="0" aria-label="Log"><div class="empty" id="empty">Your transfer shows up here as it runs. Start with a dry run: nothing is copied.</div></div>
   </div>
-  <div class="hint" id="hint" role="status"></div>
-  <div class="filters">
-    <button class="chip" type="button" data-f="hi" aria-pressed="true">Highlights</button>
-    <button class="chip" type="button" data-f="all" aria-pressed="false">Everything</button>
-    <div class="sp"></div>
-  </div>
-  <div class="log" id="log" tabindex="0" aria-label="Log">
-    <div class="empty" id="empty">Your transfer will show up here as it runs. Run a test first: nothing is copied until you untick it.</div>
-  </div>
-  <button class="btn jump" id="jump" type="button">Jump to latest</button>
+  <button class="lb jump" id="jump" type="button">Jump to latest</button>
 </section>
 
-<aside aria-label="Transfer setup">
-<form id="form" autocomplete="off">
-  <div class="fields">
-    <fieldset>
-      <legend>SOURCE</legend>
-      <div class="f"><label for="host1">Server</label><input id="host1" type="text" placeholder="imap.old-host.com" required inputmode="url" autocapitalize="none" spellcheck="false"></div>
-      <div class="f"><label for="user1">Email</label><input id="user1" type="text" placeholder="you@example.com" required autocapitalize="none" spellcheck="false"></div>
-      <div class="f" id="pw1wrap"><label for="pass1">Password</label><input id="pass1" type="password" required></div>
-      <div class="note" id="msnote" hidden>Microsoft 365 is signed in with our company login. Leave the password empty. The mailbox must be shared with it.</div>
-    </fieldset>
-    <hr>
-    <fieldset>
-      <legend>DESTINATION</legend>
-      <div class="f"><label for="host2">Server</label><input id="host2" type="text" placeholder="imap.new-host.com" required inputmode="url" autocapitalize="none" spellcheck="false"></div>
-      <div class="f"><label for="user2">Email</label><input id="user2" type="text" placeholder="you@example.com" required autocapitalize="none" spellcheck="false"></div>
-      <div class="f"><label for="pass2">Password</label><input id="pass2" type="password" required></div>
-    </fieldset>
-    <hr>
-    <fieldset>
-      <legend>OPTIONS</legend>
-      <label class="chk"><input type="checkbox" id="dry" checked>Test run first (nothing is copied)</label>
-      <label class="chk"><input type="checkbox" id="automap">Match folders like Sent and Trash automatically</label>
-    </fieldset>
-    <div class="err" id="err" role="alert"></div>
-    <div class="note">Passwords are used for this transfer only and are not stored.</div>
+<aside class="setup" aria-label="Transfer setup">
+<form id="form" autocomplete="off" style="display:contents">
+  <div class="tabs" role="tablist">
+    <button type="button" id="tab-acc" role="tab" aria-selected="true">Accounts</button>
+    <button type="button" id="tab-opt" role="tab" aria-selected="false">Options<small id="modelbl">Dry run</small></button>
   </div>
-  <div class="actions">
-    <button class="alt" id="test" type="button">Test connection</button>
-    <button class="go" id="go" type="submit">Start transfer</button>
+  <div class="panes">
+    <div class="pane acc" id="pane-acc">
+      <div class="acct" id="src">
+        <div class="ah"><span class="k">SOURCE</span><span class="sp"></span><span class="presets" data-t="1"></span></div>
+        <label class="fl">Server<input id="host1" type="text" placeholder="imap.old-host.com" required inputmode="url" autocapitalize="none" spellcheck="false"></label>
+        <label class="fl">Email<input id="user1" type="text" placeholder="you@example.com" required autocapitalize="none" spellcheck="false"></label>
+        <label class="fl" id="pw1wrap">Password<input id="pass1" type="password" required></label>
+        <div class="note" id="msnote" hidden>Microsoft 365 uses our company login. Leave the password empty. The mailbox must be shared with it.</div>
+      </div>
+      <button class="swap" id="swap" type="button" title="Swap source and destination" aria-label="Swap source and destination">&#8645;<span class="t"> Swap source and destination</span></button>
+      <div class="acct" id="dst">
+        <div class="ah"><span class="k">DESTINATION</span><span class="sp"></span><span class="presets" data-t="2"></span></div>
+        <label class="fl">Server<input id="host2" type="text" placeholder="imap.new-host.com" required inputmode="url" autocapitalize="none" spellcheck="false"></label>
+        <label class="fl">Email<input id="user2" type="text" placeholder="you@example.com" required autocapitalize="none" spellcheck="false"></label>
+        <label class="fl">Password<input id="pass2" type="password" required></label>
+      </div>
+    </div>
+    <div class="pane opt" id="pane-opt" hidden>
+      <span class="lbl">MODE</span>
+      <div class="modes" id="modes" role="radiogroup">
+        <label title="Copy all messages and folders"><input type="radio" name="mode" value="sync"><span>Sync<small>Copy all messages and folders</small></span></label>
+        <label title="Show what would be done, copy nothing"><input type="radio" name="mode" value="dry" checked><span>Dry run<small>Show what would be done, copy nothing</small></span></label>
+        <label title="Test both logins and stop"><input type="radio" name="mode" value="check"><span>Check login<small>Test both logins and stop</small></span></label>
+        <label title="List folder sizes and stop"><input type="radio" name="mode" value="sizes"><span>Folder sizes<small>List folder sizes and stop</small></span></label>
+        <label title="Create the folder tree, no messages"><input type="radio" name="mode" value="folders"><span>Folders only<small>Create the folder tree, no messages</small></span></label>
+      </div>
+      <span class="lbl">TRANSFER RULES</span>
+      <label class="chk"><input type="checkbox" id="move"><span><b>Move sync.</b> <span class="opt-chk-desc">Delete messages on the source after a successful transfer.</span></span></label>
+      <label class="chk"><input type="checkbox" id="strict"><span><b>Strict sync.</b> <span class="opt-chk-desc">Delete messages on the destination that are not on the source.</span></span></label>
+      <label class="chk"><input type="checkbox" id="automap" checked><span><b>Match special folders.</b> <span class="opt-chk-desc">Sent, Trash, Drafts and similar are paired automatically.</span></span></label>
+      <div class="two">
+        <label class="fl">Source sub-folder<input id="sub1" type="text" placeholder="optional" autocapitalize="none" spellcheck="false"></label>
+        <label class="fl">Destination sub-folder<input id="sub2" type="text" placeholder="optional" autocapitalize="none" spellcheck="false"></label>
+      </div>
+      <label class="fl wide">Extra imapsync parameters<input id="extra" type="text" placeholder="--exclude ^Spam" autocapitalize="none" spellcheck="false"></label>
+    </div>
+  </div>
+  <div class="foot">
+    <div class="err" id="err" role="alert"></div>
+    <div class="btns">
+      <button class="alt" id="test" type="button">Test connection</button>
+      <button class="go" id="go" type="submit">Start test run</button>
+    </div>
+    <div class="note">Passwords are used for this transfer only and are not stored. An interrupted transfer can be restarted without creating duplicates.</div>
   </div>
 </form>
 </aside>
@@ -141,30 +303,81 @@ hr{border:0;border-top:1px solid #ECEAE2;margin:0;width:100%}
 <script>
 (function(){
   var $=function(i){return document.getElementById(i)};
-  var logEl=$('log'),filter='hi',es=null,jobId=null,lines=[],atBottom=true,final=false;
+  var logEl=$('log'),filter='hi',es=null,jobId=null,lines=[],atBottom=true,final=false,cnt={hi:0,all:0,warn:0,err:0};
   var statusText={starting:'Starting',running:'Transfer running',done:'Finished',failed:'Stopped with an error',stopped:'Stopped'};
+  var PRESETS=[['Gmail','imap.gmail.com'],['Microsoft 365','outlook.office365.com'],['Yahoo','imap.mail.yahoo.com'],['Hostinger','imap.hostinger.com'],['OVH','ssl0.ovh.net']];
+  var GO={sync:'Start transfer',dry:'Start test run',check:'Check login',sizes:'Show folder sizes',folders:'Create folders'};
+  var MODELBL={sync:'Sync',dry:'Dry run',check:'Check login',sizes:'Folder sizes',folders:'Folders only'};
+  function mode(){return document.querySelector('input[name=mode]:checked').value;}
+  function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){}return null;}
 
-  function show(l){return filter==='all'||l.k==='key'||l.k==='ok'||l.k==='warn'||l.k==='err';}
+  /* layout switch */
+  function setLayout(l){document.body.dataset.layout=l;$('lay-rail').setAttribute('aria-pressed',l==='rail');$('lay-console').setAttribute('aria-pressed',l==='console');ls('mm-layout',l);}
+  $('lay-rail').onclick=function(){setLayout('rail');};$('lay-console').onclick=function(){setLayout('console');};
+  var saved=ls('mm-layout');setLayout(saved==='console'?'console':'rail');
+  /* tabs */
+  function setTab(t){$('pane-acc').hidden=t!=='acc';$('pane-opt').hidden=t!=='opt';$('tab-acc').setAttribute('aria-selected',t==='acc');$('tab-opt').setAttribute('aria-selected',t==='opt');}
+  $('tab-acc').onclick=function(){setTab('acc');};$('tab-opt').onclick=function(){setTab('opt');};
+  function setM(m){document.body.dataset.m=m;$('mt-setup').setAttribute('aria-selected',m==='setup');$('mt-live').setAttribute('aria-selected',m==='live');}
+  $('mt-setup').onclick=function(){setM('setup');};$('mt-live').onclick=function(){setM('live');};
+  /* in console layout (and phone) both panes are visible */
+  function paneFix(){var c=document.body.dataset.layout==='console';if(c){$('pane-acc').hidden=false;$('pane-opt').hidden=false;}else{setTab($('tab-opt').getAttribute('aria-selected')==='true'?'opt':'acc');}}
+  new MutationObserver(paneFix).observe(document.body,{attributes:true,attributeFilter:['data-layout']});paneFix();
+
+  /* presets and swap */
+  document.querySelectorAll('.presets').forEach(function(box){PRESETS.forEach(function(p){var b=document.createElement('button');b.type='button';b.className='pre';b.textContent=p[0];b.onclick=function(){$(box.dataset.t==='1'?'host1':'host2').value=p[1];syncSource();};box.appendChild(b);});});
+  $('swap').onclick=function(){['host','user','pass'].forEach(function(k){var a=$(k+'1'),b=$(k+'2'),t=a.value;a.value=b.value;b.value=t;});syncSource();};
+
+  document.querySelectorAll('input[name=mode]').forEach(function(r){r.onchange=function(){$('go').textContent=GO[mode()];$('modelbl').textContent=MODELBL[mode()];};});
+
+  /* log */
+  function kind(l){return l.k;}
+  function show(l){return filter==='all'||(filter==='hi'&&(l.k==='key'||l.k==='ok'||l.k==='warn'||l.k==='err'))||(filter==='warn'&&l.k==='warn')||(filter==='err'&&l.k==='err');}
   function el(l){var d=document.createElement('div');d.className='ln '+l.k;var t=document.createElement('span');t.className='t';t.textContent=l.t;var m=document.createElement('span');m.className='m';m.textContent=l.m;d.appendChild(t);d.appendChild(m);return d;}
-  function addLine(l){lines.push(l);var e=$('empty');if(e)e.remove();if(show(l)){logEl.appendChild(el(l));if(atBottom)logEl.scrollTop=logEl.scrollHeight;}}
+  function counts(l){cnt.all++;if(l.k==='key'||l.k==='ok'||l.k==='warn'||l.k==='err')cnt.hi++;if(l.k==='warn')cnt.warn++;if(l.k==='err')cnt.err++;}
+  function paintCounts(){['hi','all','warn','err'].forEach(function(k){$('c-'+k).textContent=cnt[k].toLocaleString();});}
+  function addLine(l){lines.push(l);counts(l);var e=$('empty');if(e)e.remove();if(show(l)){logEl.appendChild(el(l));if(atBottom)logEl.scrollTop=logEl.scrollHeight;}}
+  var cT=null;function paintSoon(){if(!cT)cT=setTimeout(function(){cT=null;paintCounts();},300);}
   function rebuild(){logEl.textContent='';lines.forEach(function(l){if(show(l))logEl.appendChild(el(l));});logEl.scrollTop=logEl.scrollHeight;}
-  logEl.addEventListener('scroll',function(){atBottom=logEl.scrollHeight-logEl.scrollTop-logEl.clientHeight<40;$('jump').classList.toggle('show',!atBottom);});
-  $('jump').addEventListener('click',function(){logEl.scrollTop=logEl.scrollHeight;});
-  document.querySelectorAll('.chip').forEach(function(c){c.addEventListener('click',function(){filter=c.dataset.f;document.querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',x===c?'true':'false');});rebuild();});});
+  logEl.addEventListener('scroll',function(){atBottom=logEl.scrollHeight-logEl.scrollTop-logEl.clientHeight<40;$('jump').classList.toggle('show',!atBottom);$('follow').textContent=atBottom?'Following latest':'Paused scrolling';});
+  $('jump').onclick=function(){logEl.scrollTop=logEl.scrollHeight;};
+  document.querySelectorAll('.chip').forEach(function(c){c.onclick=function(){filter=c.dataset.f;document.querySelectorAll('.chip').forEach(function(x){x.setAttribute('aria-pressed',x===c?'true':'false');});rebuild();};});
 
   var m365=false;
   function syncSource(){var ms=m365&&$('host1').value.trim().toLowerCase()==='outlook.office365.com';$('msnote').hidden=!ms;$('pw1wrap').hidden=ms;$('pass1').required=!ms;if(ms)$('pass1').value='';}
   $('host1').addEventListener('input',syncSource);
-  fetch('/api/config').then(function(r){return r.json();}).then(function(c){m365=!!c.m365;syncSource();}).catch(function(){});
+  function cfg(){fetch('/api/config').then(function(r){return r.json();}).then(function(c){m365=!!c.m365;syncSource();var n=c.running||0,max=c.max||3,h='';for(var i=0;i<max;i++)h+='<i class="'+(i<n?'on':'')+'"></i>';$('slots').innerHTML=h+'<span>'+n+' of '+max+' transfer slots in use</span>';}).catch(function(){});}
+  cfg();setInterval(cfg,15000);
 
   function fmt(n){return Number(n||0).toLocaleString();}
+  function eta(s){if(s==null)return '–';if(s<90)return s+' s';if(s<5400)return Math.round(s/60)+' min';return (s/3600).toFixed(1)+' h';}
+  function folderRows(list){
+    var box=$('folders');
+    if(!list||!list.length){return;}
+    $('fcount').textContent='FOLDERS · '+list.filter(function(f){return f.status==='done';}).length+' OF '+list.length;
+    var frag=document.createDocumentFragment(),cur=null;
+    list.forEach(function(f){
+      var r=document.createElement('div');r.className='fr '+(f.status||'queued');
+      var pct=f.status==='done'?100:0;
+      r.innerHTML='<span class="n"></span><span class="r"></span><span class="r"></span><div class="pb"><i style="width:'+pct+'%"></i></div><span class="st"></span>';
+      r.children[0].textContent=f.name;r.children[0].title=f.name;
+      r.children[1].textContent=f.msgs==null?'':fmt(f.msgs);r.children[2].textContent=f.size||'';
+      r.children[4].textContent={done:'Done',copying:'Copying',queued:'Queued'}[f.status||'queued'];
+      if(f.status==='copying')cur=r;frag.appendChild(r);
+    });
+    var top=box.scrollTop;box.textContent='';box.appendChild(frag);box.scrollTop=top;
+    if(cur&&!box.dataset.held){var off=cur.offsetTop-box.clientHeight/2;if(off>0)box.scrollTop=off;}
+  }
   function render(st){
-    var s=st.stats,status=st.status;
+    var s=st.stats,status=st.status,md=st.mode;
     $('dot').className='dot '+status;
     var ttl=statusText[status]||status;
-    if(st.mode==='test'&&status==='done')ttl='Connection works';
-    if(st.mode==='test'&&status==='running')ttl='Testing connection';
-    if(st.dry&&st.mode==='run'&&status==='done')ttl='Test run finished (nothing copied)';
+    if(md==='check'&&status==='done')ttl='Both logins work';
+    if(md==='check'&&status==='running')ttl='Checking logins';
+    if(md==='dry'&&status==='done')ttl='Dry run finished (nothing copied)';
+    if(md==='dry'&&status==='running')ttl='Dry run in progress';
+    if(md==='sizes'&&status==='done')ttl='Folder sizes ready';
+    if(md==='folders'&&status==='done')ttl='Folders created';
     if(st.paused)ttl='Paused';
     $('title').textContent=ttl;
     $('who').textContent=s.source&&s.dest?s.source+' → '+s.dest:'';
@@ -174,39 +387,45 @@ hr{border:0;border-top:1px solid #ECEAE2;margin:0;width:100%}
     $('s-done').textContent=fmt(s.done);
     $('s-left').textContent=s.left===null?'–':fmt(s.left);
     $('s-speed').textContent=(s.speed||0)+' msg/s';
-    $('s-err').textContent=fmt(s.errors);
+    $('s-eta').textContent=status==='running'?eta(s.etaSeconds):'–';
+    var e=$('s-err');e.textContent=fmt(s.errors);e.className='e'+(s.errors?' bad':'');
     var h=$('hint');if(s.hint){h.textContent=s.hint;h.classList.add('show');}else h.classList.remove('show');
     var live=status==='running'||status==='starting';
     $('pause').disabled=!live;$('stop').disabled=!live;$('pause').textContent=st.paused?'Resume':'Pause';
     $('go').disabled=live;$('test').disabled=live;
-    if(!live){final=true;}
+    folderRows(st.folders);paintCounts();
+    if(!live)final=true;
     if(jobId){var a=$('dl');a.style.display='inline-flex';a.href='/api/jobs/'+jobId+'/log';}
   }
+  $('folders').addEventListener('wheel',function(){$('folders').dataset.held='1';},{passive:true});
 
   function connect(id){
     if(es)es.close();jobId=id;final=false;
     try{sessionStorage.setItem('mm-job',id);}catch(e){}
     es=new EventSource('/api/jobs/'+id+'/stream?from='+(lines.length-1));
-    es.addEventListener('line',function(ev){addLine(JSON.parse(ev.data));});
-    es.addEventListener('state',function(ev){var st=JSON.parse(ev.data);render(st);if(final){es.close();}});
-    es.onerror=function(){ if(final&&es)es.close(); };
+    es.addEventListener('line',function(ev){addLine(JSON.parse(ev.data));paintSoon();});
+    es.addEventListener('state',function(ev){render(JSON.parse(ev.data));if(final){es.close();cfg();}});
+    es.onerror=function(){if(final&&es)es.close();};
   }
-
-  function reset(){lines=[];logEl.textContent='';atBottom=true;}
+  function reset(){lines=[];cnt={hi:0,all:0,warn:0,err:0};paintCounts();logEl.textContent='';atBottom=true;$('folders').textContent='';delete $('folders').dataset.held;$('folders').innerHTML='<div class="fe">Folders appear here once the source is connected.</div>';}
 
   function start(path){
     $('err').textContent='';
-    var body={host1:$('host1').value,user1:$('user1').value,pass1:$('pass1').value,host2:$('host2').value,user2:$('user2').value,pass2:$('pass2').value,dry:$('dry').checked,automap:$('automap').checked};
+    var m=mode();
+    if(path==='/api/run'&&m==='sync'&&($('move').checked||$('strict').checked)){
+      if(!window.confirm('This real transfer will delete messages ('+($('move').checked?'on the source after copying':'')+($('move').checked&&$('strict').checked?' and ':'')+($('strict').checked?'on the destination that are not on the source':'')+'). Continue?'))return;
+    }
+    var body={host1:$('host1').value,user1:$('user1').value,pass1:$('pass1').value,host2:$('host2').value,user2:$('user2').value,pass2:$('pass2').value,mode:m,automap:$('automap').checked,move:$('move').checked,strict:$('strict').checked,sub1:$('sub1').value,sub2:$('sub2').value,extra:$('extra').value};
     $('go').disabled=true;$('test').disabled=true;
     fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});}).then(function(x){
       if(!x.ok){$('err').textContent=x.j.error||'Something went wrong.';$('go').disabled=false;$('test').disabled=false;return;}
-      reset();connect(x.j.id);
+      reset();connect(x.j.id);setM('live');
     }).catch(function(){$('err').textContent='Could not reach the server.';$('go').disabled=false;$('test').disabled=false;});
   }
   $('form').addEventListener('submit',function(e){e.preventDefault();start('/api/run');});
-  $('test').addEventListener('click',function(){if($('form').reportValidity())start('/api/test');});
-  $('stop').addEventListener('click',function(){if(jobId)fetch('/api/jobs/'+jobId+'/stop',{method:'POST'});});
-  $('pause').addEventListener('click',function(){if(jobId)fetch('/api/jobs/'+jobId+'/pause',{method:'POST'});});
+  $('test').onclick=function(){if($('form').reportValidity())start('/api/test');};
+  $('stop').onclick=function(){if(jobId)fetch('/api/jobs/'+jobId+'/stop',{method:'POST'});};
+  $('pause').onclick=function(){if(jobId)fetch('/api/jobs/'+jobId+'/pause',{method:'POST'});};
 
   try{var j=sessionStorage.getItem('mm-job');if(j){fetch('/api/jobs/'+j+'/log').then(function(r){if(r.ok){connect(j);}else{sessionStorage.removeItem('mm-job');}});}}catch(e){}
 })();
