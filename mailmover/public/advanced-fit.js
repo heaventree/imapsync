@@ -7,9 +7,14 @@
   nav.parentNode.insertBefore(row,nav);row.appendChild(nav);
   var mq=window.matchMedia('(min-width:1024px)'),top=false;
   function sync(){if(top)tc.style.display=v.classList.contains('on')?'':'none';}
+  var go=document.getElementById('go'),test=document.getElementById('test'),dry=document.getElementById('btnDryTop');
+  var grp=dry?dry.parentNode:null,gp=go?go.parentNode:null,gn=go?go.nextSibling:null,tp=test?test.parentNode:null,tn=test?test.nextSibling:null;
+  if(go)go.setAttribute('form','form');
   function place(){
-    if(mq.matches&&!top){row.appendChild(tc);top=true;row.classList.add('has');}
-    else if(!mq.matches&&top){parent.insertBefore(tc,next);top=false;tc.style.display='';row.classList.remove('has');}
+    if(mq.matches&&!top){row.appendChild(tc);top=true;row.classList.add('has');
+      if(grp&&go&&test){grp.appendChild(test);grp.appendChild(go);dry.style.display='none';}}
+    else if(!mq.matches&&top){parent.insertBefore(tc,next);top=false;tc.style.display='';row.classList.remove('has');
+      if(grp&&go&&test){tp.insertBefore(test,tn);gp.insertBefore(go,gn);dry.style.display='';}}
     sync();
   }
   new MutationObserver(sync).observe(v,{attributes:true,attributeFilter:['class']});

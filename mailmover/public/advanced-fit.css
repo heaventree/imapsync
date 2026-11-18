@@ -28,3 +28,18 @@
 .advopt .advdot{display:none;width:.4rem;height:.4rem;border-radius:50%;background:currentColor;margin-left:.25rem}
 .advopt.set .advdot{display:inline-block}.advopt.danger>summary{color:#ba1a1a}
 .advopt[open]>.pt-space-xs{margin-top:.375rem}
+@media (min-width:1024px){
+  .deck .flagcol{grid-column:1/-1!important}
+  .deck .flaggrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .deck .lg\:col-span-1{display:none!important}
+  .deck .flaggrid>div{padding:.5rem .625rem!important}
+}
+@media (min-width:1024px){
+  #toprow #go{padding:.375rem 1.25rem!important;font-size:.875rem!important;line-height:1.25rem!important}
+  #toprow #test{padding:.375rem .875rem!important}
+  .footbar>div:first-child{display:none}
+  .footbar:not(:has(#err:not(:empty))){display:none}
+}
+
+/* Saved presets deferred to phase II: we state nothing is stored */
+#btnPresets{display:none!important}
