@@ -46,6 +46,36 @@ function validPass(p) {
   return typeof p === 'string' && p.length > 0 && p.length < 512 && !/[\r\n\0]/.test(p);
 }
 
+// Extra imapsync parameters: only a safe allowlist (never anything that reads files, runs commands or changes paths).
+const EXTRA_OK = {
+  '--exclude': 1, '--include': 1, '--folder': 1, '--folderrec': 1, '--folderlast': 1, '--folderfirst': 1,
+  '--maxsize': 1, '--minsize': 1, '--maxage': 1, '--minage': 1, '--skipsize': 0, '--nofoldersizes': 0,
+  '--nofoldersizesatend': 0, '--useuid': 0, '--nosyncacls': 0, '--syncacls': 0, '--noabletosearch': 0,
+  '--prefix1': 1, '--prefix2': 1, '--sep1': 1, '--sep2': 1, '--nosyncinternaldates': 0, '--skipcrossduplicates': 0,
+  '--regextrans2': 1, '--maxmessagespersecond': 1, '--maxbytespersecond': 1, '--buffersize': 1, '--delete2duplicates': 0,
+  '--skipemptyfolders': 0, '--addheader': 0, '--noresyncflags': 0
+};
+function parseExtra(text) {
+  const toks = [];
+  String(text || '').replace(/"([^"]*)"|'([^']*)'|(\S+)/g, (_, a, b, c) => { toks.push(a !== undefined ? a : b !== undefined ? b : c); return ''; });
+  const out = [];
+  for (let i = 0; i < toks.length; i++) {
+    const t = toks[i];
+    if (!(t in EXTRA_OK)) throw new Error('The option ' + t.slice(0, 40) + ' is not allowed here.');
+    out.push(t);
+    if (EXTRA_OK[t]) {
+      const v = toks[++i];
+      if (v === undefined || /[\0\r\n]/.test(v) || v.length > 300) throw new Error(t + ' needs a value.');
+      out.push(v);
+    }
+  }
+  if (out.length > 40) throw new Error('Too many extra parameters.');
+  return out;
+}
+const validFolder = (f) => f === '' || (typeof f === 'string' && f.length < 200 && !/[\0\r\n]/.test(f) && !f.startsWith('-'));
+const humanSize = (n) => n >= 1073741824 ? (n / 1073741824).toFixed(1) + ' GB' : n >= 1048576 ? Math.round(n / 1048576) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : n + ' B';
+const MODES = { sync: 1, dry: 1, check: 1, sizes: 1, folders: 1 };
+
 function classify(line) {
   if (/^Err |failure|^Host\d: failed/i.test(line)) return 'err';
   if (/success login|Detected 0 errors|sync looks good/i.test(line)) return 'ok';
@@ -70,10 +100,10 @@ function newJob(input) {
   const dir = path.join(WORK, id);
   fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
   const job = {
-    id, dir, mode: input.mode, dry: input.dry,
+    id, dir, mode: input.mode, dry: input.mode === 'dry',
     status: 'starting', lines: [], clients: new Set(), proc: null, paused: false,
-    created: Date.now(),
-    stats: { total: 0, left: null, done: 0, folder: '', folderIdx: 0, folderCount: 0, speed: 0, etaSeconds: null, errors: 0, hint: '', code: null, source: input.user1, dest: input.user2 },
+    created: Date.now(), folders: new Map(), current: null, startedAt: Date.now(),
+    stats: { mode: input.mode, total: 0, left: null, done: 0, folder: '', folderIdx: 0, folderCount: 0, speed: 0, etaSeconds: null, errors: 0, hint: '', code: null, source: input.user1, dest: input.user2 },
     dirty: false, timer: null
   };
   jobs.set(id, job);
@@ -82,7 +112,7 @@ function newJob(input) {
 
 function push(job, raw) {
   if (job.lines.length >= MAX_LINES) return;
-  const text = raw.replace(/\r$/, '');
+  const text = raw.replace(/\r$/, '').replace(/(--oauthaccesstoken\d\s+)\S+/g, '$1MASKED').replace(/eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_.-]+/g, 'MASKED');
   if (text === '') return;
   const k = classify(text);
   const entry = { t: hhmmss(), k, m: k === 'raw' || k === 'msg' ? text : friendly(text) };
@@ -94,7 +124,16 @@ function push(job, raw) {
     s.etaSeconds = parseInt(m[1], 10); s.left = parseInt(m[2], 10); s.total = parseInt(m[3], 10) || s.total;
     s.done = Math.max(0, s.total - s.left);
   }
-  if ((m = text.match(/^Folder\s+(\d+)\/(\d+)\s+\[(.*?)\]/))) { s.folderIdx = +m[1]; s.folderCount = +m[2]; s.folder = m[3]; }
+  if ((m = text.match(/^Folder\s+\[(.*?)\]\s+Size:\s+(\d+)\s+Messages:\s+(\d+)/))) {
+    const f = job.folders.get(m[1]) || { name: m[1], status: 'queued' };
+    f.size = humanSize(+m[2]); f.msgs = +m[3]; job.folders.set(m[1], f);
+  }
+  if ((m = text.match(/^Folder\s+(\d+)\/(\d+)\s+\[(.*?)\]/))) {
+    s.folderIdx = +m[1]; s.folderCount = +m[2]; s.folder = m[3];
+    if (job.current && job.folders.has(job.current)) job.folders.get(job.current).status = 'done';
+    const f = job.folders.get(m[3]) || { name: m[3] };
+    f.status = 'copying'; job.folders.set(m[3], f); job.current = m[3];
+  }
   if (/^msg /.test(text)) {
     if ((m = text.match(/(\d+(?:\.\d+)?) msgs\/s/))) s.speed = parseFloat(m[1]);
   }
@@ -112,7 +151,7 @@ function send(job, event, id, data) {
 }
 
 function state(job) {
-  return { status: job.status, paused: job.paused, mode: job.mode, dry: job.dry, stats: job.stats, lineCount: job.lines.length };
+  return { status: job.status, paused: job.paused, mode: job.mode, dry: job.dry, stats: job.stats, lineCount: job.lines.length, folders: Array.from(job.folders.values()).slice(0, 500) };
 }
 
 function schedule(job) {
@@ -140,9 +179,16 @@ function startJob(input) {
     '--host2', input.host2, '--user2', input.user2, '--passfile2', p2,
     '--nolog', '--nomodulesversion', '--noid', '--tmpdir', job.dir, '--pidfile', path.join(job.dir, 'pid')
   ];
-  if (input.mode === 'test') args.push('--justlogin');
-  if (input.mode === 'run' && input.dry) args.push('--dry');
+  if (input.mode === 'check') args.push('--justlogin');
+  if (input.mode === 'dry') args.push('--dry');
+  if (input.mode === 'sizes') args.push('--justfoldersizes');
+  if (input.mode === 'folders') args.push('--justfolders');
   if (input.automap) args.push('--automap');
+  if (input.move) args.push('--delete1', '--expunge1');
+  if (input.strict) args.push('--delete2', '--expunge2');
+  if (input.sub1) args.push('--subfolder1', input.sub1);
+  if (input.sub2) args.push('--subfolder2', input.sub2);
+  args.push(...input.extra);
   const proc = spawn(IMAPSYNC, args, { cwd: job.dir, stdio: ['ignore', 'pipe', 'pipe'], env: { PATH: process.env.PATH, HOME: job.dir, LANG: 'C.UTF-8' } });
   job.proc = proc;
   job.status = 'running';
@@ -162,6 +208,7 @@ function startJob(input) {
 function finish(job, code, sig) {
   if (['done', 'failed', 'stopped'].includes(job.status)) return;
   job.stats.code = code;
+  if (code === 0) for (const f of job.folders.values()) if (f.status === 'copying') f.status = 'done';
   if (job.stopRequested) job.status = 'stopped';
   else if (code === 0) job.status = 'done';
   else {
@@ -195,11 +242,14 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && (p === '/api/run' || p === '/api/test')) {
       const b = await readBody(req);
       const input = {
-        mode: p === '/api/test' ? 'test' : 'run',
+        mode: p === '/api/test' ? 'check' : (MODES[b.mode] ? b.mode : (b.dry === false ? 'sync' : 'dry')),
         host1: String(b.host1 || '').trim(), user1: String(b.user1 || '').trim(), pass1: b.pass1,
         host2: String(b.host2 || '').trim(), user2: String(b.user2 || '').trim(), pass2: b.pass2,
-        dry: b.dry !== false, automap: !!b.automap
+        automap: b.automap !== false, move: !!b.move, strict: !!b.strict,
+        sub1: String(b.sub1 || '').trim(), sub2: String(b.sub2 || '').trim()
       };
+      try { input.extra = parseExtra(b.extra); } catch (e) { return json(res, 400, { error: e.message }); }
+      if (!validFolder(input.sub1) || !validFolder(input.sub2)) return json(res, 400, { error: 'That sub-folder name is not valid.' });
       if (!validHost(input.host1) || !validHost(input.host2)) return json(res, 400, { error: 'Enter valid server names, like imap.example.com.' });
       if (!validUser(input.user1) || !validUser(input.user2)) return json(res, 400, { error: 'Enter both email addresses.' });
       const viaMs = input.host1.toLowerCase() === MS_HOST && !input.pass1;
@@ -212,7 +262,7 @@ const server = http.createServer(async (req, res) => {
       const job = startJob(input);
       return json(res, 200, { id: job.id });
     }
-    if (req.method === 'GET' && p === '/api/config') return json(res, 200, { m365: msConfigured() });
+    if (req.method === 'GET' && p === '/api/config') return json(res, 200, { m365: msConfigured(), running: runningCount(), max: MAX_RUNNING });
     let m = p.match(/^\/api\/jobs\/([0-9a-f]{32})\/(stream|stop|pause|log)$/);
     if (m) {
       const job = jobs.get(m[1]);
