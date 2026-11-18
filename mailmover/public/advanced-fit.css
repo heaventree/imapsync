@@ -20,6 +20,7 @@
 @media (min-width:768px){
   .card div:has(>div>input[id^="user"]){display:grid!important;grid-template-columns:1fr 1fr;gap:.5rem}
   .card div:has(>div>input[id^="user"])>*{margin-top:0!important}
+  .card div:has(>div>input[id^="user"]){align-items:end}
 }
 .card label[for^="pass"]{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.card label[for^="pass"]+span{white-space:nowrap;flex-shrink:0;margin-left:.25rem}
 .advopt>summary{list-style:none;display:flex;align-items:center;gap:.25rem;padding:.125rem 0}
@@ -71,7 +72,7 @@
   #v-setup .card.space-y-space-sm>*+*{margin-top:.875rem!important}
   #v-setup .card .space-y-space-xs>*+*{margin-top:.5rem!important}
   #v-setup .card .space-y-space-2xs>*+*{margin-top:.375rem!important}
-  .advopt>summary{padding:.375rem 0}
+  .advopt>summary{padding:.3rem 0}
   .deck .flaggrid>div{padding:.75rem .875rem!important}
 }
 @media (min-width:1024px) and (min-height:900px){

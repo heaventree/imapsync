@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Help: signing in to your mailbox — MailMover</title><meta name="description" content="What you need to connect Gmail, Google Workspace, Microsoft 365 and other mailboxes to MailMover, step by step.">
+<link rel="canonical" href="https://mailmover.eu/help.html"><link rel="stylesheet" href="/legal.css"><link id="mm-dark" rel="stylesheet" href="/dark.css" media="(prefers-color-scheme: dark)"><script src="/theme.js"></script></head><body>
+<header><div class="bar"><a class="logo" href="/"><i>M</i>MailMover</a><span class="sp"></span><a class="app" href="/">Open MailMover →</a></div></header>
+<main><h1>Signing in to your mailbox</h1><p class="lead">Some providers will not accept your normal password from another service. This page shows what to use instead, and where to get it. MailMover never stores what you type.</p>
+<p>Jump to: <a href="#google">Gmail and Google Workspace</a> · <a href="#microsoft">Microsoft 365 and Outlook.com</a> · <a href="#other">Any other provider</a> · <a href="#fix">If sign-in fails</a></p>
+
+<h2 id="google">Gmail and Google Workspace</h2>
+<p>Google does not accept your normal password here. You need an <strong>app password</strong>: a 16-character code that lets one service into your mailbox. You can delete it at any time.</p>
+<ol>
+<li>Sign in to your Google account and turn on <strong>2-Step Verification</strong> if it is not on yet: <a href="https://myaccount.google.com/security" target="_blank" rel="noopener">myaccount.google.com/security</a>.</li>
+<li>Open <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener">myaccount.google.com/apppasswords</a>, type <em>MailMover</em> as the name and choose <strong>Create</strong>.</li>
+<li>Copy the 16-character code. Google shows it only once.</li>
+<li>In MailMover choose <strong>Gmail / Workspace</strong> (server <code>imap.gmail.com</code>), enter the full email address, and paste the code as the password. You can paste it with or without spaces.</li>
+</ol>
+<p>Google's own guide: <a href="https://support.google.com/accounts/answer/185833" target="_blank" rel="noopener">Sign in with app passwords</a>.</p>
+<h3>Google Workspace (a work or school address)</h3>
+<ul><li>If the app password page says the option is not available, your administrator has not allowed it. Ask them to turn on 2-Step Verification for your account and to allow app passwords.</li>
+<li>IMAP access must also be on for your account. In Gmail, open Settings, then <em>Forwarding and POP/IMAP</em>, and make sure IMAP is enabled.</li></ul>
+
+<h2 id="microsoft">Microsoft 365 and Outlook.com</h2>
+<p>Microsoft has switched off password sign-in for IMAP on most mailboxes. If you try one, MailMover reports that basic authentication is disabled.</p>
+<ul>
+<li><strong>Outlook.com and Hotmail (personal):</strong> turn on two-step verification in your Microsoft account security settings, create an app password there, and use it in place of your normal password. Microsoft explains how: <a href="https://support.microsoft.com/account-billing/manage-app-passwords-for-two-step-verification-d6dc8c6d-4bf7-4851-ad95-6d07799387e9" target="_blank" rel="noopener">Manage app passwords</a>.</li>
+<li><strong>Microsoft 365 for business or school:</strong> a password usually does not work, and an app password is normally not offered. These mailboxes need a Microsoft sign-in approved by your IT administrator. MailMover's Microsoft 365 sign-in is not switched on yet, so business Microsoft 365 mailboxes cannot be moved with a password for now.</li>
+</ul>
+<p>Server name for both: <code>outlook.office365.com</code>.</p>
+
+<h2 id="other">Any other provider</h2>
+<p>Choose <strong>Custom IMAP</strong> and enter the server name your provider gives for incoming mail, usually written like <code>imap.yourprovider.com</code>. MailMover connects on port 993 with SSL.</p>
+<ul><li>Use the full email address as the username unless your provider says otherwise.</li>
+<li>Many providers (Yahoo, iCloud, Zoho and others) also require an app password. Look for <em>app password</em> or <em>third-party app</em> in your account's security settings.</li>
+<li>If your site is hosted with a web host, the server name and a mailbox password are in the host's email settings, often listed as <em>Manual settings</em> or <em>Client configuration</em>.</li></ul>
+
+<h2 id="fix">If sign-in fails</h2>
+<ul><li><strong>Check the server name</strong> first, then the full email address.</li>
+<li><strong>Use <em>Test Both Logins</em></strong> before you start. It checks both mailboxes without moving anything.</li>
+<li><strong>Source login failed</strong> means the first mailbox rejected the details. <strong>Destination login failed</strong> means the second one did.</li>
+<li><strong>Copy the app password again.</strong> A stray space or a missing character is the most common cause.</li></ul>
+<footer><a href="/terms">Terms of Service</a><a href="/privacy">Privacy</a><a href="/acceptable-use">Acceptable Use</a><a href="/security">Security</a><a href="/legal">Legal Disclosure</a></footer></main></body></html>
