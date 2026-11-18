@@ -299,7 +299,7 @@ const server = http.createServer(async (req, res) => {
         // the layout switcher (Rail / Console / Advanced) is added to the main page without editing it
         // the Legal menu (Terms, Privacy, Security...) is added to both app pages the same way
         const LM = '<script src="/legal-menu.js"></script>';
-        res.end(rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style></head>').replace('</body>', '<script src="/switch.js"></script>' + LM + '</body>') : rel === 'advanced.html' ? data.toString().replace('</body>', LM + '</body>') : data);
+        res.end(rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style></head>').replace('</body>', '<script src="/switch.js"></script>' + LM + '</body>') : rel === 'advanced.html' ? data.toString().replace('</head>', '<link rel="stylesheet" href="/advanced-fit.css"></head>').replace('</body>', '<script src="/advanced-fit.js"></script>' + LM + '</body>') : data);
       });
     }
     res.writeHead(404); res.end('Not found');
