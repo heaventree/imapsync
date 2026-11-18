@@ -289,14 +289,17 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'GET' && p === '/healthz') return json(res, 200, { ok: true });
     if (req.method === 'GET') {
-      const rel = p === '/' ? 'index.html' : p.replace(/^\/+/, '');
+      const LEGAL = { '/terms': 'terms.html', '/privacy': 'privacy.html', '/security': 'security.html', '/acceptable-use': 'acceptable-use.html', '/legal': 'legal.html' };
+      const rel = p === '/' ? 'index.html' : (LEGAL[p.replace(/\/+$/, '')] || p.replace(/^\/+/, ''));
       const file = path.normalize(path.join(PUBLIC, rel));
       if (!file.startsWith(PUBLIC + path.sep)) { res.writeHead(404); return res.end('Not found'); }
       return fs.readFile(file, (err, data) => {
         if (err) { res.writeHead(404); return res.end('Not found'); }
         res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
         // the layout switcher (Rail / Console / Advanced) is added to the main page without editing it
-        res.end(rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style></head>').replace('</body>', '<script src="/switch.js"></script></body>') : data);
+        // the Legal menu (Terms, Privacy, Security...) is added to both app pages the same way
+        const LM = '<script src="/legal-menu.js"></script>';
+        res.end(rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style></head>').replace('</body>', '<script src="/switch.js"></script>' + LM + '</body>') : rel === 'advanced.html' ? data.toString().replace('</body>', LM + '</body>') : data);
       });
     }
     res.writeHead(404); res.end('Not found');
