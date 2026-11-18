@@ -299,8 +299,8 @@ const server = http.createServer(async (req, res) => {
         // the layout switcher (Rail / Console / Advanced) is added to the main page without editing it
         // the Legal menu (Terms, Privacy, Security...) is added to both app pages the same way
         const LM = '<script src="/legal-menu.js"></script>';
-        const DK = '<link rel="stylesheet" href="/dark.css" media="(prefers-color-scheme: dark)">';
-        res.end(rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style>' + DK + '</head>').replace('</body>', '<script src="/switch.js"></script>' + LM + '</body>') : rel === 'advanced.html' ? data.toString().replace('</head>', '<link rel="stylesheet" href="/advanced-fit.css">' + DK + '</head>').replace('</body>', '<script src="/advanced-fit.js"></script>' + LM + '</body>') : data);
+        const DK = '<link id="mm-dark" rel="stylesheet" href="/dark.css" media="(prefers-color-scheme: dark)"><script src="/theme.js"></script>';
+        res.end(rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style>' + DK + '</head>').replace('</body>', '<script src="/switch.js"></script><script src="/pw-eye.js"></script>' + LM + '</body>') : rel === 'advanced.html' ? data.toString().replace('</head>', '<link rel="stylesheet" href="/advanced-fit.css">' + DK + '</head>').replace('</body>', '<script src="/advanced-fit.js"></script>' + LM + '</body>') : /^(terms|privacy|security|acceptable-use|legal)\.html$/.test(rel) ? data.toString().replace('</head>', DK + '</head>') : data);
       });
     }
     res.writeHead(404); res.end('Not found');
