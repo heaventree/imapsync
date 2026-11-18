@@ -1,11 +1,28 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>MailMover</title>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>MailMover Advanced</title>
 <link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="/stitch.css" rel="stylesheet"/>
 <style>
 html,body{margin:0;padding:0;height:100%;overflow:hidden}
+header.mmh{height:48px;flex-shrink:0;display:flex;align-items:center;gap:14px;padding:0 24px;background:#fff;border-bottom:1px solid #DEDCD3;font-family:"Instrument Sans",system-ui,sans-serif;font-size:13px;line-height:1.4;color:#16191D;z-index:50}
+.mmh .logo{width:22px;height:22px;border-radius:3px;background:#0F766E;color:#fff;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center}
+.mmh b{font-size:15px;font-weight:600}
+.mmh .vr{width:1px;height:18px;background:#DEDCD3}
+.mmh .tag{color:#5B636B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mmh .sp{flex:1}
+.mmh .slots{display:flex;align-items:center;gap:8px;color:#5B636B;white-space:nowrap}
+.mmh .slotdots{display:flex;gap:4px}.mmh .slots i{width:7px;height:7px;border-radius:50%;background:#B9B7AD}.mmh .slots i.on{background:#1F8A5B}
+.mmh .seg{display:flex;border:1px solid #C9C6BB;border-radius:3px;overflow:hidden;background:#fff;flex-shrink:0}
+.mmh .seg a,.mmh .seg button{display:inline-flex;align-items:center;border:0;background:#fff;height:28px;padding:0 11px;font-size:12.5px;font-weight:500;text-decoration:none;color:#16191D;font-family:inherit;cursor:pointer}
+.mmh .seg>*+*{border-left:1px solid #C9C6BB}
+.mmh .seg button[aria-pressed=true]{background:#16191D;color:#fff}
+@media (max-width:900px){.mmh .tag,.mmh .vr,.mmh .slots,.mmh .seg{display:none}header.mmh{padding:0 16px}}
+.mmh .back{display:none;margin-left:auto;color:#0F766E;font-weight:600;text-decoration:none}@media (max-width:900px){.mmh .back{display:inline}}
+.w-fit{width:fit-content}.self-start{align-self:flex-start}
+.max-w-7xl{max-width:none!important}
 body{overscroll-behavior:none;height:100dvh;display:flex;flex-direction:column}
 ::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#c5c6cd;border-radius:3px}
 .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;line-height:1;display:inline-block;letter-spacing:normal;text-transform:none;white-space:nowrap;direction:ltr}
@@ -24,28 +41,42 @@ input[type=radio].sr-only:focus-visible+div,label:focus-within{outline:none}
   .flagcol{grid-column:span 3/span 3!important}.flaggrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
   .prov{grid-template-columns:repeat(6,minmax(0,1fr))!important}.prov button{padding-left:2px!important;padding-right:2px!important;font-size:10.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 }
+@media (max-height:880px) and (min-width:1024px){
+  #nav{margin-top:.25rem!important}#nav a{padding-top:.125rem!important;padding-bottom:.125rem!important}
+}
 @media (max-height:780px) and (min-width:1024px){
+  .flagcol>span.font-label-md{display:none}.card label:has(+ .prov){display:none}
+
   .card{padding:.625rem .875rem!important}.card>div:first-child{margin:-.625rem -.875rem 0!important;padding:.5rem .75rem!important}
   #v-setup .scrollpane>div{padding-top:.5rem!important;padding-bottom:.5rem!important}
   #v-setup .space-y-space-md>*+*{margin-top:.5rem!important}
   .deck{padding:.625rem .875rem!important}
   .compactp{padding:.25rem .5rem!important}
   .card>*+*{margin-top:.3rem!important}.deck>*+*{margin-top:.4rem!important}
-  header>div{height:3rem!important}
   .titlecard{padding:.375rem .75rem!important}.footbar{padding:.375rem 1rem!important}
   #modes label{padding:.375rem .5rem!important}.flaggrid>div{padding:.375rem .5rem!important}
 }
 </style></head>
 <body class="bg-surface font-body-md text-on-surface antialiased">
 
-<header class="w-full flex-shrink-0 z-50 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 max-w-7xl mx-auto px-margin flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-lg"><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary tracking-tight">MailMover</span><span class="font-mono-data-sm text-mono-data-sm text-on-surface-variant uppercase hide-mobile">Mailbox Migration Engine</span></div><div class="hidden sm:flex items-center gap-space-xs px-space-sm py-space-2xs bg-surface-container-low rounded"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span><span class="font-mono-data-sm text-mono-data-sm text-on-surface-variant" id="slotsTxt">System Ready — 0/3 concurrent slots</span></div></div>
-<nav class="hidden md:flex items-center p-space-2xs bg-surface-container-low rounded" id="nav"><a aria-current="page" class="px-space-md py-space-xs transition-colors rounded bg-surface-container-high text-on-surface font-headline-sm" data-view="setup" href="#setup">Migration Setup</a><a class="px-space-md py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors rounded" data-view="live" href="#live">Live Monitor &amp; Console</a></nav>
-<div class="flex items-center gap-space-lg"><a class="hidden lg:inline text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm transition-colors" href="https://imapsync.lamiral.info/#doc" target="_blank" rel="noopener">Docs &amp; imapsync flags</a>
-<div class="flex items-center p-space-2xs bg-surface-container-low rounded font-label-sm text-label-sm" role="group" aria-label="Layout"><a class="px-space-sm py-space-xs rounded text-on-surface-variant hover:text-on-surface" href="/" data-lay="rail">Rail</a><a class="px-space-sm py-space-xs rounded text-on-surface-variant hover:text-on-surface" href="/" data-lay="console">Console</a><span class="px-space-sm py-space-xs rounded bg-surface-container-high text-on-surface font-semibold">Stitch</span></div></div></div></header>
+<header class="mmh">
+  <div class="logo" aria-hidden="true">M</div><b>MailMover</b>
+  <div class="vr"></div>
+  <span class="tag">Copy a complete mailbox to another, without duplicates</span>
+  <div class="sp"></div>
+  <span class="slots" title="Transfers running on this server"><span class="slotdots"><i></i><i></i><i></i></span><span id="slotsTxt">0 of 3 transfer slots in use</span></span>
+  <div class="seg" role="group" aria-label="Layout">
+    <a href="/" data-lay="rail">Rail</a>
+    <a href="/" data-lay="console">Console</a>
+    <button type="button" aria-pressed="true">Advanced</button>
+  </div>
+  <a class="back" href="/" data-lay="console">Basic view</a>
+</header>
 
-<nav class="md:hidden flex-shrink-0 flex items-center p-space-2xs mx-space-md mt-space-sm bg-surface-container-low rounded" id="mnav"><a aria-current="page" class="flex-1 text-center px-space-md py-space-xs rounded bg-surface-container-high text-on-surface font-headline-sm" data-view="setup" href="#setup">Setup</a><a class="flex-1 text-center px-space-md py-space-xs text-on-surface-variant font-label-md text-label-md rounded" data-view="live" href="#live">Live &amp; Console</a></nav>
+<nav class="md:hidden flex-shrink-0 flex items-center p-space-2xs mx-space-md mt-space-sm bg-surface-container-low rounded" id="mnav"><a aria-current="page" class="flex-1 text-center px-space-md py-space-xs rounded bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold" data-view="setup" href="#setup">Setup</a><a class="flex-1 text-center px-space-md py-space-xs text-on-surface-variant font-label-md text-label-md rounded" data-view="live" href="#live">Live &amp; Console</a></nav>
 
 <main class="w-full flex-1 min-h-0 bg-surface flex flex-col">
+<nav class="hidden md:flex items-center p-space-2xs bg-surface-container-low rounded self-start mt-space-sm flex-shrink-0 w-fit" style="margin-left:1.5rem" id="nav"><a aria-current="page" class="px-space-md py-space-xs transition-colors rounded bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold" data-view="setup" href="#setup">Migration Setup</a><a class="px-space-md py-space-xs text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors rounded" data-view="live" href="#live">Live Monitor &amp; Console</a></nav>
 <form id="form" autocomplete="off" class="flex-1 min-h-0 flex flex-col">
 
 <!-- ===================== VIEW 1: MIGRATION SETUP ===================== -->
@@ -175,7 +206,7 @@ input[type=radio].sr-only:focus-visible+div,label:focus-within{outline:none}
 <div class="flex items-start gap-space-xs p-space-sm rounded bg-surface-container-low"><input class="mt-0.5 rounded text-primary focus:ring-0" id="flag-sub" type="checkbox"/><div><label class="font-label-md text-label-md text-on-surface cursor-pointer font-medium" for="flag-sub">Strict Subscriptions Only</label><p class="font-mono-data-sm text-mono-data-sm text-on-surface-variant mt-0.5 hide-short">Sync only folders flagged in IMAP LSUB records.</p></div></div>
 </div>
 <div class="space-y-space-2xs pt-space-xs">
-<div class="flex justify-between items-center"><label class="font-label-sm text-label-sm text-on-surface-variant" for="extra">Custom Parameters &amp; Regex Flags</label><span class="font-mono-data-sm text-mono-data-sm text-outline hide-mobile">Passed directly to imapsync runtime</span></div>
+<div class="flex justify-between items-center"><label class="font-label-sm text-label-sm text-on-surface-variant" for="extra">Custom Parameters &amp; Regex Flags</label><span class="font-mono-data-sm text-mono-data-sm text-outline hide-mobile">Passed directly to the MailMover engine</span></div>
 <div class="flex items-center rounded bg-surface-container-low px-space-sm py-2"><span class="font-mono-data-sm text-mono-data-sm text-outline mr-2 select-none">$</span>
 <input class="w-full bg-transparent font-mono-data-sm text-mono-data-sm text-primary focus:outline-none placeholder:text-outline-variant" id="extra" type="text" placeholder='--exclude "(^Spam|^Trash)" --minage 30 --maxsize 25000000' autocapitalize="none" spellcheck="false"/></div>
 </div>
@@ -272,7 +303,7 @@ input[type=radio].sr-only:focus-visible+div,label:focus-within{outline:none}
 <button type="button" class="p-1 hover:bg-[#1e2e47] rounded text-slate-400 hover:text-white transition-colors" title="Clear Console" id="clr"><span class="material-symbols-outlined text-[16px]">clear_all</span></button></div>
 </div>
 <div class="p-space-md font-mono-data-sm text-mono-data-sm leading-relaxed overflow-y-auto flex-1 min-h-0 bg-[#0b1320] flex flex-col gap-1 select-text" id="term"><div class="text-slate-500" id="termEmpty">Your transfer shows up here as it runs. Start with a dry run: nothing is copied.</div></div>
-<div class="px-space-md py-space-xs bg-[#070d17] flex items-center justify-between font-mono-data-sm text-[11px] text-slate-400 flex-shrink-0"><div class="flex items-center gap-space-md"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-500" id="sockDot"></span><span id="sockTxt">Idle</span></span><span class="hide-mobile">Stream: imapsync.stdout</span></div><div class="flex items-center gap-space-sm text-slate-500"><span>Encoding: UTF-8</span></div></div>
+<div class="px-space-md py-space-xs bg-[#070d17] flex items-center justify-between font-mono-data-sm text-[11px] text-slate-400 flex-shrink-0"><div class="flex items-center gap-space-md"><span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-500" id="sockDot"></span><span id="sockTxt">Idle</span></span><span class="hide-mobile">Stream: mailmover.stdout</span></div><div class="flex items-center gap-space-sm text-slate-500"><span>Encoding: UTF-8</span></div></div>
 </div>
 </div>
 
@@ -286,7 +317,7 @@ input[type=radio].sr-only:focus-visible+div,label:focus-within{outline:none}
 </form>
 </main>
 
-<dialog id="cliDlg" class="rounded shadow-lg p-space-lg max-w-2xl w-[92vw] bg-surface-container-lowest text-on-surface"><div class="flex items-center justify-between mb-space-sm"><span class="font-headline-sm text-headline-sm text-primary">CLI Command</span><button type="button" id="cliX" class="text-on-surface-variant" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div><p class="font-body-sm text-body-sm text-on-surface-variant mb-space-sm">The imapsync command this form runs. Passwords are replaced with placeholders.</p><pre class="bg-surface-container-low p-space-sm rounded font-mono-data-sm text-mono-data-sm whitespace-pre-wrap break-all" id="cliTxt"></pre></dialog>
+<dialog id="cliDlg" class="rounded shadow-lg p-space-lg max-w-2xl w-[92vw] bg-surface-container-lowest text-on-surface"><div class="flex items-center justify-between mb-space-sm"><span class="font-headline-sm text-headline-sm text-primary">CLI Command</span><button type="button" id="cliX" class="text-on-surface-variant" aria-label="Close"><span class="material-symbols-outlined">close</span></button></div><p class="font-body-sm text-body-sm text-on-surface-variant mb-space-sm">The MailMover command this form runs. Passwords are replaced with placeholders.</p><pre class="bg-surface-container-low p-space-sm rounded font-mono-data-sm text-mono-data-sm whitespace-pre-wrap break-all" id="cliTxt"></pre></dialog>
 
 <script>
 (function(){
@@ -307,8 +338,8 @@ input[type=radio].sr-only:focus-visible+div,label:focus-within{outline:none}
   function view(v){
     $('v-setup').classList.toggle('on',v==='setup');$('v-live').classList.toggle('on',v==='live');
     document.querySelectorAll('#nav a,#mnav a').forEach(function(a){
-      var on=a.dataset.view===v;a.className=a.className.replace(/\b(bg-surface-container-high|text-on-surface-variant|text-on-surface|font-headline-sm|font-label-md|text-label-md)\b/g,'').replace(/\s+/g,' ').trim();
-      a.className+=on?' bg-surface-container-high text-on-surface font-headline-sm':' text-on-surface-variant font-label-md text-label-md';
+      var on=a.dataset.view===v;a.className=a.className.replace(/\b(bg-surface-container-high|text-on-surface-variant|text-on-surface|font-headline-sm|font-label-md|text-label-md|font-semibold)\b/g,'').replace(/\s+/g,' ').trim();
+      a.className+=on?' bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold':' text-on-surface-variant font-label-md text-label-md';
       if(on)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
     });
     try{history.replaceState(null,'','#'+v);}catch(e){}
@@ -344,7 +375,7 @@ input[type=radio].sr-only:focus-visible+div,label:focus-within{outline:none}
   document.querySelectorAll('[data-eye]').forEach(function(b){b.onclick=function(){var f=$(b.dataset.eye);f.type=f.type==='password'?'text':'password';};});
   $('swap').onclick=function(){['host','user','pass'].forEach(function(k){var a=$(k+'1'),b=$(k+'2'),t=a.value;a.value=b.value;b.value=t;});markProv();};
 
-  /* flags -> imapsync parameters */
+  /* flags -> engine parameters */
   function q(v){return /\s/.test(v)||/[|()^$]/.test(v)?'"'+v+'"':v;}
   function extraString(){
     var p=[];
@@ -356,7 +387,7 @@ input[type=radio].sr-only:focus-visible+div,label:focus-within{outline:none}
     return p.join(' ');
   }
   function cliText(){
-    var m=mode(),a=['imapsync','--host1 '+q($('host1').value||'HOST1'),'--user1 '+q($('user1').value||'USER1'),'--password1 "$PASS1"','--host2 '+q($('host2').value||'HOST2'),'--user2 '+q($('user2').value||'USER2'),'--password2 "$PASS2"'];
+    var m=mode(),a=['mailmover','--host1 '+q($('host1').value||'HOST1'),'--user1 '+q($('user1').value||'USER1'),'--password1 "$PASS1"','--host2 '+q($('host2').value||'HOST2'),'--user2 '+q($('user2').value||'USER2'),'--password2 "$PASS2"'];
     if(m==='check')a.push('--justlogin');if(m==='dry')a.push('--dry');if(m==='sizes')a.push('--justfoldersizes');if(m==='folders')a.push('--justfolders');
     if($('automap').checked)a.push('--automap');if($('move').checked)a.push('--delete1 --expunge1');if($('strict').checked)a.push('--delete2 --expunge2');
     if($('sub1').value)a.push('--subfolder1 '+q($('sub1').value));if($('sub2').value)a.push('--subfolder2 '+q($('sub2').value));
@@ -380,7 +411,7 @@ input[type=radio].sr-only:focus-visible+div,label:focus-within{outline:none}
 
   /* server slots */
   function cfg(){fetch('/api/config').then(function(r){return r.json();}).then(function(c){var n=c.running||0,max=c.max||3;
-    $('slotsTxt').textContent=(n?'Transfer running':'System Ready')+' — '+n+'/'+max+' concurrent slots';$('queueTxt').textContent='Transfer queue: '+n+' running / '+max+' max';
+    $('slotsTxt').textContent=n+' of '+max+' transfer slots in use';var sd=document.querySelector('.mmh .slotdots');sd.innerHTML='';for(var si=0;si<max;si++){var ii=document.createElement('i');if(si<n)ii.className='on';sd.appendChild(ii);}$('queueTxt').textContent='Transfer queue: '+n+' running / '+max+' max';
     $('pingTxt').textContent=n+' running • '+max+' max';$('pingBar').style.width=Math.max(8,Math.round((max-n)/max*100))+'%';$('pingState').textContent=n>=max?'Full':'Ready';$('dSlots').textContent=n+' of '+max+' in use';}).catch(function(){});}
   cfg();setInterval(cfg,15000);
 
