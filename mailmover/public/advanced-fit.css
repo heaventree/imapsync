@@ -62,3 +62,22 @@
   #v-live>div>div:first-child>div:first-child>div:first-child{flex-direction:row!important;align-items:center;gap:1rem}
   #v-live>div>div:first-child>div:first-child>div:first-child>div:nth-child(2){margin-top:0!important}
 }
+
+/* Roomier setup when the window has the height for it: taller inputs, easier targets, more air between groups */
+@media (min-width:1024px) and (min-height:740px){
+  #v-setup input:not([type=checkbox]):not([type=radio]){min-height:2.375rem}
+  #v-setup .card [title^="MailMover connects"]>*{min-height:2.375rem;display:flex;align-items:center;justify-content:center}
+  .prov button{min-height:2.125rem}
+  #v-setup .card.space-y-space-sm>*+*{margin-top:.875rem!important}
+  #v-setup .card .space-y-space-xs>*+*{margin-top:.5rem!important}
+  #v-setup .card .space-y-space-2xs>*+*{margin-top:.375rem!important}
+  .advopt>summary{padding:.375rem 0}
+  .deck .flaggrid>div{padding:.75rem .875rem!important}
+}
+@media (min-width:1024px) and (min-height:900px){
+  #v-setup input:not([type=checkbox]):not([type=radio]){min-height:2.625rem}
+  #v-setup .card [title^="MailMover connects"]>*{min-height:2.625rem}
+  .prov button{min-height:2.375rem}
+  #v-setup .card.space-y-space-sm>*+*{margin-top:1.25rem!important}
+  #v-setup .space-y-space-md>*+*{margin-top:1.5rem!important}
+}
