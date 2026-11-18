@@ -1,5 +1,5 @@
 'use strict';
-// MailMover: a small web front end for imapsync. No dependencies.
+// MailMover: a small web front end for the imapsync engine. No dependencies.
 // Runs imapsync as a child process, parses its output into progress, and
 // streams it to the browser with server-sent events. Put TLS and a login in
 // front of it (Dokploy/Traefik).
@@ -200,7 +200,7 @@ function startJob(input) {
   };
   proc.stdout.on('data', onData);
   proc.stderr.on('data', onData);
-  proc.on('error', (e) => { push(job, 'Err could not start imapsync: ' + e.message); finish(job, -1, null); });
+  proc.on('error', (e) => { push(job, 'Err could not start the MailMover engine: ' + e.message); finish(job, -1, null); });
   proc.on('close', (code, sig) => { if (buf) push(job, buf); buf = ''; finish(job, code, sig); });
   return job;
 }
@@ -295,8 +295,8 @@ const server = http.createServer(async (req, res) => {
       return fs.readFile(file, (err, data) => {
         if (err) { res.writeHead(404); return res.end('Not found'); }
         res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
-        // the layout switcher (Rail / Console / Stitch) is added to the main page without editing it
-        res.end(rel === 'index.html' ? data.toString().replace('</body>', '<script src="/switch.js"></script></body>') : data);
+        // the layout switcher (Rail / Console / Advanced) is added to the main page without editing it
+        res.end(rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style></head>').replace('</body>', '<script src="/switch.js"></script></body>') : data);
       });
     }
     res.writeHead(404); res.end('Not found');
