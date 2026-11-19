@@ -128,7 +128,7 @@ function push(job, raw) {
   const s = job.stats;
   let m;
   if (!s.total && (m = text.match(/^Host1 Nb messages:\s+(\d+) messages/))) s.total = parseInt(m[1], 10);
-  if ((m = text.match(/^ETA: .*?\s(\d+) s\s+(\d+)\/(\d+) msgs left/))) {
+  if ((m = text.match(/ETA: .*?\s(\d+) s\s+(\d+)\/(\d+) msgs left/))) {
     s.etaSeconds = parseInt(m[1], 10); s.left = parseInt(m[2], 10); s.total = parseInt(m[3], 10) || s.total;
     s.done = Math.max(0, s.total - s.left);
   }
