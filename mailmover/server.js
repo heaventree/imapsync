@@ -250,6 +250,7 @@ const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': '
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = url.pathname;
+  if (req.method === 'HEAD') req.method = 'GET'; // crawlers probe with HEAD; Node drops the body for them
   try {
     if (req.method === 'POST' && (p === '/api/run' || p === '/api/test')) {
       const b = await readBody(req);
