@@ -312,7 +312,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && p === '/sitemap.xml') { res.writeHead(200, { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' }); return res.end(SEO.sitemap()); }
     if (req.method === 'GET' && p === '/llms.txt') { res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }); return res.end(SEO.llms()); }
     if (req.method === 'GET') {
-      const LEGAL = { '/terms': 'terms.html', '/privacy': 'privacy.html', '/security': 'security.html', '/acceptable-use': 'acceptable-use.html', '/legal': 'legal.html' };
+      const LEGAL = { '/terms': 'terms.html', '/privacy': 'privacy.html', '/security': 'security.html', '/acceptable-use': 'acceptable-use.html', '/legal': 'legal.html', '/guides': 'guides/index.html' };
       const rel = p === '/' ? 'index.html' : (LEGAL[p.replace(/\/+$/, '')] || p.replace(/^\/+/, ''));
       const file = path.normalize(path.join(PUBLIC, rel));
       if (!file.startsWith(PUBLIC + path.sep)) { res.writeHead(404); return res.end('Not found'); }

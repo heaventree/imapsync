@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IMAP server settings for Gmail, Outlook.com, Yahoo and iCloud | MailMover</title><meta name="description" content="IMAP server names and ports for Gmail, Outlook.com, Yahoo and iCloud, and where to find them for any other provider.">
+<link rel="canonical" href="https://mailmover.eu/guides/imap-server-settings.html"><link rel="stylesheet" href="/legal.css"><link id="mm-dark" rel="stylesheet" href="/dark.css" media="(prefers-color-scheme: dark)"><script src="/theme.js"></script></head><body>
+<header><div class="bar"><a class="logo" href="/"><i>M</i>MailMover</a><span class="sp"></span><a class="app" href="/">Open MailMover →</a></div></header>
+<main><h1>IMAP server settings for common providers</h1><p class="lead">MailMover connects over IMAP with SSL on port 993. Use these server names, and the full email address as the username.</p>
+<table><thead><tr><th>Provider</th><th>IMAP server</th><th>Port</th><th>Password to use</th></tr></thead><tbody>
+<tr><td>Gmail and Google Workspace</td><td><code>imap.gmail.com</code></td><td>993 (SSL)</td><td>App password</td></tr>
+<tr><td>Outlook.com and Hotmail</td><td><code>outlook.office365.com</code></td><td>993 (SSL)</td><td>App password</td></tr>
+<tr><td>Yahoo Mail</td><td><code>imap.mail.yahoo.com</code></td><td>993 (SSL)</td><td>App password</td></tr>
+<tr><td>iCloud Mail</td><td><code>imap.mail.me.com</code></td><td>993 (SSL)</td><td>App-specific password</td></tr>
+</tbody></table>
+<h2>Any other provider</h2><p>Look for the incoming mail server in your provider's email settings, often under <em>Manual settings</em> or <em>Client configuration</em>. If your site is hosted with a web host, the server name and mailbox password are in the host's email settings. Choose <strong>Custom IMAP</strong> in MailMover and enter them.</p>
+<p>Business Microsoft 365 mailboxes usually need a company sign-in rather than a password, so they cannot be moved with a password for now. See <a href="/help.html#microsoft">Microsoft 365 and Outlook.com</a>.</p>
+<p><a href="/guides/gmail-app-password.html">How to create a Gmail app password</a> · <a href="/">Open MailMover</a></p>
+<footer><a href="/guides">Guides</a><a href="/help.html">Help</a><a href="/terms">Terms of Service</a><a href="/privacy">Privacy</a><a href="/acceptable-use">Acceptable Use</a><a href="/security">Security</a><a href="/legal">Legal Disclosure</a></footer></main></body></html>
