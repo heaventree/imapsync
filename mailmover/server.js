@@ -243,7 +243,9 @@ function readBody(req, limit = 20000) {
 
 const json = (res, code, obj) => { res.mmErr = obj && obj.error; res.writeHead(code, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(obj)); };
 
-const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
+const SEO = require('./seo');
+const SEO_IMG = require('./seo-assets');
+const MIME = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml' };
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
@@ -305,6 +307,10 @@ const server = http.createServer(async (req, res) => {
       if (m[2] === 'pause') { job.paused = !job.paused; job.proc.kill('SIGUSR1'); flush(job); return json(res, 200, { paused: job.paused }); }
     }
     if (req.method === 'GET' && p === '/healthz') return json(res, 200, { ok: true });
+    if (req.method === 'GET' && SEO_IMG[p]) { res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' }); return res.end(SEO_IMG[p]); }
+    if (req.method === 'GET' && p === '/robots.txt') { res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }); return res.end(SEO.robots()); }
+    if (req.method === 'GET' && p === '/sitemap.xml') { res.writeHead(200, { 'Content-Type': 'application/xml', 'Cache-Control': 'public, max-age=3600' }); return res.end(SEO.sitemap()); }
+    if (req.method === 'GET' && p === '/llms.txt') { res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=3600' }); return res.end(SEO.llms()); }
     if (req.method === 'GET') {
       const LEGAL = { '/terms': 'terms.html', '/privacy': 'privacy.html', '/security': 'security.html', '/acceptable-use': 'acceptable-use.html', '/legal': 'legal.html' };
       const rel = p === '/' ? 'index.html' : (LEGAL[p.replace(/\/+$/, '')] || p.replace(/^\/+/, ''));
@@ -317,7 +323,9 @@ const server = http.createServer(async (req, res) => {
         // the Legal menu (Terms, Privacy, Security...) is added to both app pages the same way
         const LM = '<script src="/legal-menu.js"></script>';
         const DK = '<link id="mm-dark" rel="stylesheet" href="/dark.css" media="(prefers-color-scheme: dark)"><script src="/theme.js"></script>';
-        res.end(rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style>' + DK + '</head>').replace('</body>', '<script src="/switch.js"></script><script src="/pw-eye.js"></script><script src="/presets.js"></script><script src="/live.js"></script>' + LM + '</body>') : rel === 'advanced.html' ? data.toString().replace('</head>', '<link rel="stylesheet" href="/advanced-fit.css">' + DK + '</head>').replace('</body>', '<script src="/advanced-fit.js"></script><script src="/presets.js"></script><script src="/live.js"></script>' + LM + '</body>') : /^(terms|privacy|security|acceptable-use|legal)\.html$/.test(rel) ? data.toString().replace('</head>', DK + '</head>') : data);
+        const out = rel === 'index.html' ? data.toString().replace('Extra imapsync parameters', 'Extra MailMover parameters').replace('</head>', '<style>body[data-layout=console] #modebar #w-extra{flex:1;min-width:0;flex-direction:row;align-items:center;gap:10px;white-space:nowrap}</style>' + DK + '</head>').replace('</body>', '<script src="/switch.js"></script><script src="/pw-eye.js"></script><script src="/presets.js"></script><script src="/live.js"></script>' + LM + '</body>') : rel === 'advanced.html' ? data.toString().replace('</head>', '<link rel="stylesheet" href="/advanced-fit.css">' + DK + '</head>').replace('</body>', '<script src="/advanced-fit.js"></script><script src="/presets.js"></script><script src="/live.js"></script>' + LM + '</body>') : /^(terms|privacy|security|acceptable-use|legal)\.html$/.test(rel) ? data.toString().replace('</head>', DK + '</head>') : data;
+        const sk = Object.keys(SEO.PAGES).find(k => SEO.PAGES[k].file === rel);
+        res.end(path.extname(file) === '.html' && (sk || rel === 'advanced.html') ? SEO.decorate(out.toString(), sk || '/', rel === 'advanced.html') : out);
       });
     }
     res.writeHead(404); res.end('Not found');
