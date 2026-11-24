@@ -5,5 +5,8 @@
   var seg=document.querySelector('.seg');
   if(seg){var b=document.createElement('button');b.type='button';b.id='lay-advanced';b.setAttribute('aria-pressed','false');b.textContent='Advanced';b.onclick=go;seg.appendChild(b);}
   var mt=document.querySelector('.mtabs');
-  if(mt){var m=document.createElement('button');m.type='button';m.textContent='Advanced';m.onclick=go;mt.appendChild(m);}
+  if(mt){var m=document.createElement('button');m.type='button';m.textContent='Advanced';m.onclick=go;mt.appendChild(m);
+    // the buttons carry aria-selected, so they need the tab role (Advanced is a third view, so it is a tab too)
+    m.setAttribute('aria-selected','false');
+    Array.prototype.forEach.call(mt.querySelectorAll('button'),function(t){t.setAttribute('role','tab');});}
 })();
